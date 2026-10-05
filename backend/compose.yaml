@@ -1,0 +1,11 @@
+# Postgres para desarrollo. Spring Boot lo levanta solo al correr la app
+# (spring-boot-docker-compose) y lo detiene al terminar.
+services:
+  postgres:
+    image: 'postgres:17'
+    environment:
+      - 'POSTGRES_DB=nutrikit'
+      - 'POSTGRES_USER=nutrikit'
+      - 'POSTGRES_PASSWORD=nutrikit'
+    ports:
+      - '5432'
