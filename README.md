@@ -2,9 +2,13 @@
 
 Plataforma web multi-tenant para nutriólogos: expediente, consultas con mediciones y gráficas de progreso, planes de alimentación con el Sistema Mexicano de Alimentos Equivalentes, y una página privada para cada paciente, sin registro.
 
-> Estado: fase 0 (fundamentos). Ver el [modelo de datos](docs/modelo-de-datos.pdf) y las [decisiones de arquitectura](docs/adr/).
+> Estado: fase 0 (fundamentos). Ver el [modelo de datos](docs/modelo-de-datos.pdf), las [decisiones de arquitectura](docs/adr/) y los [diagramas C4](docs/architecture/).
 
 ## Arquitectura
+
+![Diagrama C4 de contenedores de nutrikit](docs/architecture/c4-nivel-2-contenedores.svg)
+
+Diagramas C4 como código en [`docs/architecture/`](docs/architecture/): [nivel 1 · contexto](docs/architecture/c4-nivel-1-contexto.svg) y [nivel 2 · contenedores](docs/architecture/c4-nivel-2-contenedores.svg).
 
 - **Monolito modular** con Spring Modulith: cada módulo es dueño de sus tablas, se comunica por eventos y se puede encender o apagar por consultorio ([ADR-0001](docs/adr/0001-monolito-modular.md)).
 - **Multi-tenant** en una sola base con `tenant_id` y Row-Level Security ([ADR-0002](docs/adr/0002-multi-tenant.md)).
@@ -18,7 +22,8 @@ Plataforma web multi-tenant para nutriólogos: expediente, consultas con medicio
 | Datos | PostgreSQL 17, Flyway |
 | Pruebas | JUnit 5, Testcontainers, pruebas de arquitectura de Modulith |
 | Frontend | React + TypeScript + Vite (pendiente) |
-| Infra | Docker Compose, GitHub Actions, AWS + Terraform (pendiente) |
+| CI/CD | Jenkins (`Jenkinsfile`, pendiente) |
+| Infra | Docker Compose, AWS + Terraform (pendiente) |
 
 ## Estructura
 
@@ -27,7 +32,7 @@ nutrikit/
 ├── backend/     # Spring Boot: un módulo por paquete en dev.jorgemiguel.nutrikit
 ├── frontend/    # React (pendiente)
 ├── infra/       # Terraform y despliegue (pendiente)
-└── docs/        # ADRs y modelo de datos
+└── docs/        # ADRs, diagramas C4 y modelo de datos
 ```
 
 ## Correr en local

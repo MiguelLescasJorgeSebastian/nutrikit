@@ -1,0 +1,33 @@
+---
+title: Nivel 1 · Contexto del sistema nutrikit
+---
+%% Diagrama C4 de contexto. Notación C4 sobre flowchart de Mermaid:
+%% la sintaxis C4Context nativa es experimental y no acomoda bien este número de elementos.
+flowchart TB
+    nutriologa["<b>Nutrióloga</b><br/><i>[Persona]</i><br/><br/>Gestiona expedientes, consultas,<br/>planes de alimentación y el sitio<br/>web de su consultorio."]
+    paciente["<b>Paciente</b><br/><i>[Persona]</i><br/><br/>Consulta su progreso y su plan<br/>en una página privada,<br/>sin registrarse."]
+    visitante["<b>Visitante</b><br/><i>[Persona]</i><br/><br/>Conoce el consultorio<br/>en su sitio público."]
+    operador["<b>Operador</b><br/><i>[Persona]</i><br/><br/>Da de alta consultorios,<br/>activa módulos y opera<br/>la plataforma."]
+
+    nutrikit["<b>nutrikit</b><br/><i>[Sistema de software]</i><br/><br/>Plataforma web multi-tenant para<br/>consultorios de nutrición: expediente,<br/>consultas, planes, agenda y sitio web."]
+
+    correo["<b>Servicio de correo</b><br/><i>[Sistema externo: Amazon SES]</i><br/><br/>Entrega enlaces privados,<br/>recordatorios y avisos."]
+    inbody["<b>InBody</b><br/><i>[Sistema externo]</i><br/><br/>Báscula de bioimpedancia; exporta<br/>mediciones de composición corporal."]
+    aws["<b>AWS</b><br/><i>[Sistema externo]</i><br/><br/>Nube que hospeda la plataforma,<br/>sus datos, archivos y sitios públicos."]
+
+    nutriologa -- "Gestiona pacientes, consultas,<br/>planes y su sitio<br/><i>[HTTPS]</i>" --> nutrikit
+    operador -- "Administra consultorios<br/>y módulos<br/><i>[HTTPS]</i>" --> nutrikit
+    paciente -- "Abre su página con<br/>un enlace privado<br/><i>[HTTPS]</i>" --> nutrikit
+    visitante -- "Visita el sitio público<br/>del consultorio<br/><i>[HTTPS]</i>" --> nutrikit
+
+    nutrikit -- "Envía enlaces y avisos<br/><i>[API de SES]</i>" --> correo
+    correo -. "Entrega el enlace privado<br/><i>[Correo electrónico]</i>" .-> paciente
+    nutrikit -- "Importa mediciones<br/><i>[Archivo exportado<br/>de LookinBody]</i>" --> inbody
+    nutrikit -- "Se ejecuta y guarda<br/>datos en<br/><i>[Servicios administrados]</i>" --> aws
+
+    classDef person fill:#08427b,stroke:#052e56,color:#ffffff
+    classDef system fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
+    class nutriologa,paciente,visitante,operador person
+    class nutrikit system
+    class correo,inbody,aws external

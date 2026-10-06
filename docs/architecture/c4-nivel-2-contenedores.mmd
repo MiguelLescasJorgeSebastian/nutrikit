@@ -1,0 +1,46 @@
+---
+title: Nivel 2 · Contenedores de nutrikit
+config:
+  layout: elk
+---
+%% Diagrama C4 de contenedores. Notación C4 sobre flowchart de Mermaid.
+%% Usa el layout ELK: con dagre las flechas de las personas terminan en el borde del sistema.
+flowchart TB
+    nutriologa["<b>Nutrióloga</b><br/><i>[Persona]</i>"]
+    operador["<b>Operador</b><br/><i>[Persona]</i>"]
+    paciente["<b>Paciente</b><br/><i>[Persona]</i>"]
+    visitante["<b>Visitante</b><br/><i>[Persona]</i>"]
+
+    subgraph nk["nutrikit [Sistema de software]"]
+        spa["<b>Aplicación web</b><br/><i>[Contenedor: React, TypeScript, Vite]</i><br/><br/>Panel de la nutrióloga y del operador,<br/>y página privada del paciente."]
+        site["<b>Sitio público del consultorio</b><br/><i>[Contenedor: HTML estático<br/>en S3 + CloudFront]</i><br/><br/>Un sitio por consultorio, generado<br/>desde plantillas y publicado a demanda."]
+        api["<b>API backend</b><br/><i>[Contenedor: Java 25, Spring Boot 4.1,<br/>Spring Modulith]</i><br/><br/>Monolito modular: expediente, consultas,<br/>planes, agenda, sitio web y auditoría."]
+        db[("<b>Base de datos</b><br/><i>[Contenedor: PostgreSQL 17<br/>en Amazon RDS]</i><br/><br/>Datos de todos los consultorios,<br/>aislados con tenant_id y<br/>Row-Level Security.")]
+        files[("<b>Almacenamiento de archivos</b><br/><i>[Contenedor: Amazon S3]</i><br/><br/>PDFs, fotos e importaciones<br/>de InBody, cifrados en reposo.")]
+        jenkins["<b>Servidor de CI/CD</b><br/><i>[Contenedor: Jenkins en Docker]</i><br/><br/>Compila, prueba y despliega<br/>backend y frontend."]
+    end
+
+    correo["<b>Servicio de correo</b><br/><i>[Sistema externo: Amazon SES]</i>"]
+    inbody["<b>InBody</b><br/><i>[Sistema externo]</i>"]
+
+    nutriologa -- "Gestiona su consultorio<br/><i>[HTTPS]</i>" --> spa
+    operador -- "Administra consultorios<br/>y módulos<br/><i>[HTTPS]</i>" --> spa
+    paciente -- "Abre su página con<br/>enlace privado<br/><i>[HTTPS]</i>" --> spa
+    visitante -- "Visita<br/><i>[HTTPS]</i>" --> site
+
+    spa -- "Consume la API<br/><i>[JSON sobre HTTPS, JWT]</i>" --> api
+    api -- "Genera y publica el sitio<br/><i>[AWS SDK: S3 e invalidación<br/>de CloudFront]</i>" --> site
+    api -- "Lee y escribe<br/><i>[JDBC, Flyway]</i>" --> db
+    api -- "Guarda y entrega archivos<br/><i>[AWS SDK, URLs prefirmadas]</i>" --> files
+    api -- "Envía correos<br/><i>[API de SES]</i>" --> correo
+    api -- "Importa mediciones<br/><i>[Archivo exportado<br/>de LookinBody]</i>" --> inbody
+    jenkins -. "Despliega<br/><i>[Imagen Docker]</i>" .-> api
+    jenkins -. "Publica el build<br/><i>[Archivos estáticos]</i>" .-> spa
+
+    classDef person fill:#08427b,stroke:#052e56,color:#ffffff
+    classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
+    class nutriologa,operador,paciente,visitante person
+    class spa,site,api,db,files,jenkins container
+    class correo,inbody external
+    style nk fill:none,stroke:#444444,stroke-dasharray:6 4,color:#444444
