@@ -1,5 +1,13 @@
 # Postgres para desarrollo. Spring Boot lo levanta solo al correr la app
 # (spring-boot-docker-compose) y lo detiene al terminar.
+#
+# La app no usa las credenciales de POSTGRES_USER (dueño de las tablas, superusuario):
+# Flyway migra con ellas y la app se conecta como nutrikit_app para que aplique
+# Row-Level Security. Por eso Spring Boot ignora este servicio al configurar la conexión
+# y los datos de conexión están en application-dev.properties.
+#
+# El rol nutrikit_app se crea al inicializar el volumen. Si tu volumen es anterior,
+# recréalo con: docker compose down -v
 services:
   postgres:
     image: 'postgres:17'
@@ -8,4 +16,13 @@ services:
       - 'POSTGRES_USER=nutrikit'
       - 'POSTGRES_PASSWORD=nutrikit'
     ports:
-      - '5432'
+      - '5433:5432'
+    volumes:
+      - './docker/postgres/init:/docker-entrypoint-initdb.d:ro'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nutrikit -d nutrikit']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    labels:
+      org.springframework.boot.ignore: true
