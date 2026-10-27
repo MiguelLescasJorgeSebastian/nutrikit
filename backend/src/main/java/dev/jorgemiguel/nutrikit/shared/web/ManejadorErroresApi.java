@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import dev.jorgemiguel.nutrikit.shared.ConsultorioNoDisponibleException;
+import dev.jorgemiguel.nutrikit.shared.ConsultorioNoIdentificadoException;
 import dev.jorgemiguel.nutrikit.shared.ErrorDeCampo;
 
 /**
@@ -42,6 +44,21 @@ class ManejadorErroresApi extends ResponseEntityExceptionHandler {
 		problema.setDetail("La petición tiene %d error(es) de validación".formatted(errores.size()));
 		problema.setProperty("errores", errores);
 		return handleExceptionInternal(ex, problema, headers, status, request);
+	}
+
+	/** Petición a la API de un consultorio sin subdominio ni cabecera que lo identifique. */
+	@ExceptionHandler
+	ProblemDetail consultorioNoIdentificado(ConsultorioNoIdentificadoException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+		problema.setTitle("Consultorio no identificado");
+		return problema;
+	}
+
+	@ExceptionHandler
+	ProblemDetail consultorioNoDisponible(ConsultorioNoDisponibleException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problema.setTitle("Consultorio no disponible");
+		return problema;
 	}
 
 	/** Orden por una propiedad que no existe, por ejemplo {@code ?sort=contrasena}. */

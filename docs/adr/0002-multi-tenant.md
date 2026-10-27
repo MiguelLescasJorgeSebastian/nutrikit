@@ -27,3 +27,5 @@ Base compartida con columna `tenant_id NOT NULL` en toda tabla de negocio, con d
 - Los índices empiezan por `tenant_id`.
 - Cada endpoint tiene una prueba automatizada que confirma que un usuario de un consultorio recibe 404 sobre recursos de otro.
 - Si un cliente grande exige aislamiento físico, se puede mover a esquema propio sin cambiar el código de dominio.
+
+Implementación detallada en [0004](0004-implementacion-aislamiento-tenant.md).
