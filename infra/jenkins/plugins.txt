@@ -1,0 +1,10 @@
+# Plugins de Jenkins con versión fija. Sus dependencias las resuelve jenkins-plugin-cli.
+# Para actualizar: quita las versiones, reconstruye y fija las nuevas (ver README.md).
+configuration-as-code:2136.veb_3a_554550b_f
+job-dsl:3732.v9a_c49a_61a_313
+workflow-aggregator:608.v67378e9d3db_1
+github-branch-source:1986.v801e40614d00
+git:5.11.0
+junit:1443.v0b_f1b_5b_55d9e
+timestamper:1.30
+pipeline-graph-view:1053.v9df19e6ceed2
