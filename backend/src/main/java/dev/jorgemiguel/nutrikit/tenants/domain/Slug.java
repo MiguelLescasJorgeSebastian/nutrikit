@@ -17,7 +17,10 @@ public record Slug(@Column(name = "slug") String valor) {
 	public static final int LONGITUD_MINIMA = 3;
 	public static final int LONGITUD_MAXIMA = 60;
 
-	private static final Pattern FORMATO = Pattern.compile("^[a-z0-9]+(-[a-z0-9]+)*$");
+	/** Público para reutilizarlo en validaciones de entrada ({@code @Pattern}). */
+	public static final String FORMATO_REGEX = "^[a-z0-9]+(-[a-z0-9]+)*$";
+
+	private static final Pattern FORMATO = Pattern.compile(FORMATO_REGEX);
 
 	public Slug {
 		if (valor == null) {
