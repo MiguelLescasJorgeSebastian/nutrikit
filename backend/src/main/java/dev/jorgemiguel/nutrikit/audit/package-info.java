@@ -1,8 +1,9 @@
 /**
- * Módulo Auditoría: bitácora append-only de accesos y cambios a expedientes.
+ * Módulo Auditoría: bitácora append-only de quién hizo qué, sobre qué recurso y cuándo.
  *
- * <p>Fase 0. Solo exponer en la raíz de este paquete la API pública del módulo;
- * el resto va en subpaquetes internos (domain, application, infrastructure, web).
+ * <p>No expone API: escucha eventos de dominio de otros módulos (alta y cambio de estado de
+ * consultorios, inicios de sesión) y los guarda en {@code auditoria}. Ningún módulo lo llama
+ * directamente. Ver docs/adr/0006-bitacora-de-auditoria.md.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Auditoría")
 package dev.jorgemiguel.nutrikit.audit;

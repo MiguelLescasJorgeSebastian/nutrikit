@@ -3,17 +3,23 @@ package dev.jorgemiguel.nutrikit.iam.application;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
+import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
 import dev.jorgemiguel.nutrikit.iam.application.LimitadorDeIntentos.Clave;
 import dev.jorgemiguel.nutrikit.iam.domain.RefreshToken;
 import dev.jorgemiguel.nutrikit.iam.domain.RefreshTokenRepository;
 import dev.jorgemiguel.nutrikit.iam.domain.Usuario;
 import dev.jorgemiguel.nutrikit.iam.domain.UsuarioRepository;
+import dev.jorgemiguel.nutrikit.shared.Origen;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
+import dev.jorgemiguel.nutrikit.shared.TipoDeActor;
 
 /**
  * Inicio de sesión, renovación y cierre de sesión de los usuarios de un consultorio. Todo ocurre
@@ -30,6 +36,7 @@ public class AutenticacionService {
 	private final EmisorDeTokens emisor;
 	private final LimitadorDeIntentos limitador;
 	private final SeguridadProperties properties;
+	private final ApplicationEventPublisher eventos;
 	private final Clock clock;
 
 	/**
@@ -40,13 +47,14 @@ public class AutenticacionService {
 
 	AutenticacionService(UsuarioRepository usuarios, RefreshTokenRepository refreshTokens,
 			PasswordEncoder passwordEncoder, EmisorDeTokens emisor, LimitadorDeIntentos limitador,
-			SeguridadProperties properties, Clock clock) {
+			SeguridadProperties properties, ApplicationEventPublisher eventos, Clock clock) {
 		this.usuarios = usuarios;
 		this.refreshTokens = refreshTokens;
 		this.passwordEncoder = passwordEncoder;
 		this.emisor = emisor;
 		this.limitador = limitador;
 		this.properties = properties;
+		this.eventos = eventos;
 		this.clock = clock;
 		this.hashSenuelo = passwordEncoder.encode("contraseña-señuelo-sin-dueño");
 	}
@@ -55,7 +63,11 @@ public class AutenticacionService {
 	 * @throws DemasiadosIntentosException si la IP o el correo superaron los fallos permitidos
 	 * @throws CredencialesInvalidasException si el correo no existe, la contraseña no coincide o
 	 * el usuario está inactivo
+	 *
+	 * <p>{@code noRollbackFor}: el intento fallido se audita con un evento que solo se entrega si
+	 * la transacción se confirma. En ese camino no se escribe nada más.
 	 */
+	@Transactional(noRollbackFor = CredencialesInvalidasException.class)
 	public SesionEmitida iniciarSesion(String email, String password, String ip) {
 		String correo = Usuario.normalizarEmail(email);
 		var porIp = Clave.ip(ip, properties.intentos().maximoPorIp());
@@ -64,14 +76,19 @@ public class AutenticacionService {
 
 		Optional<Usuario> encontrado = usuarios.findByEmail(correo);
 		boolean coincide = passwordEncoder.matches(password, encontrado.map(Usuario::getPasswordHash).orElse(hashSenuelo));
+		UUID tenantId = TenantContext.requerido();
 		if (encontrado.isEmpty() || !coincide || !encontrado.get().isActivo()) {
 			limitador.registrarFallo(porIp, porCuenta);
+			eventos.publishEvent(new InicioDeSesionFallido(tenantId, encontrado.map(Usuario::getId).orElse(null),
+					Origen.actual().conActor(TipoDeActor.ANONIMO, null), clock.instant()));
 			throw new CredencialesInvalidasException();
 		}
 
 		limitador.reiniciar(porCuenta);
 		Usuario usuario = encontrado.get();
 		usuario.registrarAcceso(clock.instant());
+		eventos.publishEvent(new InicioDeSesionExitoso(tenantId, usuario.getId(),
+				Origen.actual().conActor(TipoDeActor.USUARIO, usuario.getId()), clock.instant()));
 		return emitirSesion(usuario);
 	}
 
