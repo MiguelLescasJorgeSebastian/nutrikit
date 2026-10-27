@@ -1,5 +1,7 @@
 package dev.jorgemiguel.nutrikit.iam.application;
 
+import dev.jorgemiguel.nutrikit.shared.Origen;
+
 /**
  * Claims propios del access token. Solo identificadores: el JWT se puede decodificar sin la
  * clave, así que nunca lleva datos personales ni de salud.
@@ -13,7 +15,7 @@ public final class ClaimsJwt {
 	public static final String ROL = "rol";
 
 	/** Rol de la plataforma; no existe en la tabla usuario. */
-	public static final String ROL_OPERADOR = "OPERADOR";
+	public static final String ROL_OPERADOR = Origen.ROL_OPERADOR;
 
 	private ClaimsJwt() {
 	}

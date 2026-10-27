@@ -1,12 +1,17 @@
 package dev.jorgemiguel.nutrikit.tenants.application;
 
+import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.jorgemiguel.nutrikit.shared.Origen;
+import dev.jorgemiguel.nutrikit.tenants.EstadoDeTenantCambiado;
+import dev.jorgemiguel.nutrikit.tenants.TenantCreado;
 import dev.jorgemiguel.nutrikit.tenants.domain.EstadoTenant;
 import dev.jorgemiguel.nutrikit.tenants.domain.Slug;
 import dev.jorgemiguel.nutrikit.tenants.domain.SlugDuplicadoException;
@@ -22,9 +27,11 @@ import dev.jorgemiguel.nutrikit.tenants.domain.TenantRepository;
 public class TenantService {
 
 	private final TenantRepository repository;
+	private final ApplicationEventPublisher eventos;
 
-	TenantService(TenantRepository repository) {
+	TenantService(TenantRepository repository, ApplicationEventPublisher eventos) {
 		this.repository = repository;
+		this.eventos = eventos;
 	}
 
 	/**
@@ -35,7 +42,11 @@ public class TenantService {
 		if (repository.existsBySlug(slug)) {
 			throw new SlugDuplicadoException(slug);
 		}
-		return repository.save(Tenant.crear(slug, nombre));
+		Tenant tenant = repository.save(Tenant.crear(slug, nombre));
+		// Se publica dentro de la transacción: Modulith guarda el evento junto con el alta, y los
+		// listeners corren solo si el alta se confirma.
+		eventos.publishEvent(new TenantCreado(tenant.getId(), slug.valor(), Origen.actual(), Instant.now()));
+		return tenant;
 	}
 
 	@Transactional(readOnly = true)
@@ -51,11 +62,14 @@ public class TenantService {
 	/** Lleva el consultorio al estado indicado; la entidad decide si la transición es válida. */
 	public Tenant cambiarEstado(UUID id, EstadoTenant destino) {
 		Tenant tenant = buscar(id);
+		EstadoTenant anterior = tenant.getEstado();
 		switch (destino) {
 			case ACTIVO -> tenant.reactivar();
 			case SUSPENDIDO -> tenant.suspender();
 			case CANCELADO -> tenant.cancelar();
 		}
+		eventos.publishEvent(new EstadoDeTenantCambiado(id, anterior.name(), destino.name(), Origen.actual(),
+				Instant.now()));
 		return tenant;
 	}
 
