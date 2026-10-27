@@ -3,6 +3,8 @@ package dev.jorgemiguel.nutrikit.tenants.domain;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 
 /**
@@ -14,6 +16,8 @@ public interface TenantRepository extends Repository<Tenant, UUID> {
 	Tenant save(Tenant tenant);
 
 	Optional<Tenant> findById(UUID id);
+
+	Page<Tenant> findAll(Pageable pageable);
 
 	Optional<Tenant> findBySlug(Slug slug);
 
