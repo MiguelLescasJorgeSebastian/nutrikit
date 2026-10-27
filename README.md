@@ -41,11 +41,20 @@ Requisitos: JDK 25 y Docker Desktop abierto.
 
 ```bash
 cd backend
-./mvnw spring-boot:run   # levanta Postgres con compose.yaml y la app en :8080
+./mvnw spring-boot:run   # perfil dev: levanta Postgres con compose.yaml y la app en :8080
 ./mvnw verify            # pruebas, incluida la verificación de módulos
 ```
 
 `./mvnw verify` genera diagramas de los módulos en `backend/target/spring-modulith-docs`.
+
+La API de un consultorio (`/api/**` salvo `/api/operador/**`) necesita saber de qué consultorio es la petición. En desarrollo:
+
+```bash
+curl -H 'X-Tenant: nutri-ana' localhost:8080/api/consultorio
+curl nutri-ana.localhost:8080/api/consultorio
+```
+
+La app se conecta a Postgres con un usuario sin permisos de dueño para que aplique Row-Level Security ([ADR-0004](docs/adr/0004-implementacion-aislamiento-tenant.md)). Si tu base local es anterior a ese cambio, recréala con `docker compose down -v` dentro de `backend/`.
 
 ## Datos
 

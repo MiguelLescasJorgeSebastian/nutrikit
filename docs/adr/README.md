@@ -7,3 +7,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0001](0001-monolito-modular.md) | Monolito modular con Spring Modulith | Aceptada |
 | [0002](0002-multi-tenant.md) | Multi-tenant con base compartida y `tenant_id` | Aceptada |
 | [0003](0003-acceso-paciente-enlace.md) | Acceso del paciente por enlace privado | Aceptada |
+| [0004](0004-implementacion-aislamiento-tenant.md) | Implementación del aislamiento entre consultorios | Aceptada |
