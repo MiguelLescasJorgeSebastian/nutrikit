@@ -1,5 +1,8 @@
 package dev.jorgemiguel.nutrikit;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistrar;
@@ -35,7 +38,15 @@ public class TestcontainersConfiguration {
 			registry.add("spring.datasource.password", () -> USUARIO_APP);
 			registry.add("spring.flyway.user", postgres::getUsername);
 			registry.add("spring.flyway.password", postgres::getPassword);
+			registry.add("nutrikit.seguridad.jwt.secreto", TestcontainersConfiguration::claveAleatoria);
 		};
+	}
+
+	/** Clave de firma de JWT distinta en cada contexto de pruebas; nunca una fija en el repo. */
+	private static String claveAleatoria() {
+		byte[] bytes = new byte[32];
+		new SecureRandom().nextBytes(bytes);
+		return Base64.getEncoder().encodeToString(bytes);
 	}
 
 }

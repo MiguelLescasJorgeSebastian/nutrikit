@@ -5,9 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,9 +22,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import dev.jorgemiguel.nutrikit.iam.infrastructure.SeguridadConfig;
 import dev.jorgemiguel.nutrikit.tenants.application.TenantNoEncontradoException;
@@ -53,6 +56,27 @@ class TenantControllerTest {
 
 	@MockitoBean
 	private TenantService service;
+
+	/** La configuración de seguridad lo necesita; {@code jwt()} evita usarlo. */
+	@MockitoBean
+	private JwtDecoder jwtDecoder;
+
+	private static RequestPostProcessor operador() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_OPERADOR"));
+	}
+
+	/** Peticiones con un JWT de operador; las rutas de este controlador lo exigen. */
+	private static MockHttpServletRequestBuilder get(String url) {
+		return MockMvcRequestBuilders.get(url).with(operador());
+	}
+
+	private static MockHttpServletRequestBuilder post(String url) {
+		return MockMvcRequestBuilders.post(url).with(operador());
+	}
+
+	private static MockHttpServletRequestBuilder patch(String url) {
+		return MockMvcRequestBuilders.patch(url).with(operador());
+	}
 
 	private static Tenant tenantConId(String slug) {
 		Tenant tenant = Tenant.crear(Slug.of(slug), "Consultorio Ana");
