@@ -26,6 +26,8 @@ public class SeguridadConfig {
 						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 						// TODO(#8): .hasRole("OPERADOR")
 						.requestMatchers("/api/operador/**").permitAll()
+						// TODO(#8): .authenticated() y el consultorio del JWT igual al de la petición
+						.requestMatchers("/api/consultorio/**").permitAll()
 						.anyRequest().authenticated())
 				.build();
 	}
