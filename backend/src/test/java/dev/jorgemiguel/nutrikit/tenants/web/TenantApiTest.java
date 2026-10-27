@@ -2,9 +2,7 @@ package dev.jorgemiguel.nutrikit.tenants.web;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,7 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jorgemiguel.nutrikit.TestcontainersConfiguration;
@@ -24,7 +26,7 @@ import dev.jorgemiguel.nutrikit.TestcontainersConfiguration;
  * Prueba de punta a punta: HTTP, seguridad, servicio, JPA y Postgres real. Cada prueba corre en
  * una transacción que se revierte al terminar.
  */
-@SpringBootTest
+@SpringBootTest(properties = { "springdoc.api-docs.enabled=true", "springdoc.swagger-ui.enabled=true" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional
@@ -34,6 +36,23 @@ class TenantApiTest {
 
 	@Autowired
 	private MockMvc mvc;
+
+	private static RequestPostProcessor operador() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_OPERADOR"));
+	}
+
+	/** Peticiones con un JWT de operador; las rutas de este controlador lo exigen. */
+	private static MockHttpServletRequestBuilder get(String url) {
+		return MockMvcRequestBuilders.get(url).with(operador());
+	}
+
+	private static MockHttpServletRequestBuilder post(String url) {
+		return MockMvcRequestBuilders.post(url).with(operador());
+	}
+
+	private static MockHttpServletRequestBuilder patch(String url) {
+		return MockMvcRequestBuilders.patch(url).with(operador());
+	}
 
 	private String crear(String slug) throws Exception {
 		return mvc.perform(post(RUTA).contentType(MediaType.APPLICATION_JSON).content("""

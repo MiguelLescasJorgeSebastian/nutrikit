@@ -11,8 +11,6 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 
 import dev.jorgemiguel.nutrikit.shared.FiltroDeTenant;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
@@ -20,17 +18,11 @@ import dev.jorgemiguel.nutrikit.shared.TenantContext;
 /**
  * Un módulo del sistema (pacientes, consultas, agenda...) y si está encendido para el consultorio.
  *
- * <p>Es la primera entidad con datos de consultorio: lleva el filtro de tenant y la tabla tiene
- * Row-Level Security. Aquí vive también la definición del filtro, que es global; cuando haya más
- * entidades con {@code tenant_id}, conviene moverla a un solo lugar.
+ * <p>Datos de consultorio: lleva el filtro de tenant y la tabla tiene Row-Level Security.
  */
 @Entity
 @Table(name = "tenant_modulo")
 @IdClass(TenantModulo.Llave.class)
-@FilterDef(name = FiltroDeTenant.NOMBRE, defaultCondition = FiltroDeTenant.CONDICION,
-		parameters = @ParamDef(name = FiltroDeTenant.PARAMETRO, type = UUID.class,
-				resolver = FiltroDeTenant.TenantActual.class),
-		autoEnabled = true, applyToLoadByKey = true)
 @Filter(name = FiltroDeTenant.NOMBRE)
 public class TenantModulo {
 

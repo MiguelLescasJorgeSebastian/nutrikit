@@ -9,15 +9,9 @@ import java.util.function.Supplier;
  * Row-Level Security en la base.
  *
  * <p>Cada entidad con {@code tenant_id} lleva {@code @Filter(name = FiltroDeTenant.NOMBRE)}. La
- * definición ({@code @FilterDef}) va una sola vez, con {@code autoEnabled} para que esté activo
- * en toda sesión y {@code applyToLoadByKey} para que también aplique a {@code findById}:
- *
- * <pre>{@code
- * @FilterDef(name = FiltroDeTenant.NOMBRE, defaultCondition = FiltroDeTenant.CONDICION,
- *         parameters = @ParamDef(name = FiltroDeTenant.PARAMETRO, type = UUID.class,
- *                 resolver = FiltroDeTenant.TenantActual.class),
- *         autoEnabled = true, applyToLoadByKey = true)
- * }</pre>
+ * definición ({@code @FilterDef}) está una sola vez en {@code package-info.java} de este paquete,
+ * con {@code autoEnabled} para que esté activa en toda sesión y {@code applyToLoadByKey} para que
+ * también aplique a {@code findById}.
  */
 public final class FiltroDeTenant {
 

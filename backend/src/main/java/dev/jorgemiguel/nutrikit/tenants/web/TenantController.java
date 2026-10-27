@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -33,10 +34,10 @@ import dev.jorgemiguel.nutrikit.tenants.domain.Tenant;
 /**
  * Alta y administración de consultorios desde el panel de operador.
  *
- * <p>Seguridad: {@code /api/operador/**} queda abierto mientras llega #8; ahí debe exigir el rol
- * de operador.
+ * <p>Exige el rol {@code OPERADOR}.
  */
 @Tag(name = "Consultorios", description = "Alta y administración de consultorios (panel de operador)")
+@SecurityRequirement(name = "bearer")
 @RestController
 @RequestMapping(TenantController.RUTA)
 class TenantController {

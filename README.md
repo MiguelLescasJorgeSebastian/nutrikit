@@ -47,12 +47,29 @@ cd backend
 
 `./mvnw verify` genera diagramas de los módulos en `backend/target/spring-modulith-docs`.
 
-La API de un consultorio (`/api/**` salvo `/api/operador/**`) necesita saber de qué consultorio es la petición. En desarrollo:
+Swagger UI queda en <http://localhost:8080/swagger-ui.html> (solo en desarrollo).
+
+### Probar la API
+
+La API de un consultorio (`/api/**` salvo `/api/operador/**`) necesita saber de qué consultorio es la petición y un access token de ese consultorio ([ADR-0005](docs/adr/0005-autenticacion-jwt.md)). En desarrollo el consultorio se indica con la cabecera `X-Tenant` o con el subdominio `{slug}.localhost`.
 
 ```bash
-curl -H 'X-Tenant: nutri-ana' localhost:8080/api/consultorio
-curl nutri-ana.localhost:8080/api/consultorio
+# 1. Operador local (application-dev.properties): crea un consultorio y su titular
+OP=$(curl -s -X POST localhost:8080/api/operador/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"operador@nutrikit.local","password":"operador-dev"}' | jq -r .accessToken)
+ID=$(curl -s -X POST localhost:8080/api/operador/tenants -H "Authorization: Bearer $OP" \
+  -H 'Content-Type: application/json' -d '{"slug":"nutri-ana","nombre":"Consultorio Ana"}' | jq -r .id)
+curl -s -X POST localhost:8080/api/operador/tenants/$ID/usuarios -H "Authorization: Bearer $OP" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"ana@nutriana.mx","nombre":"Ana","rol":"TITULAR","password":"una-contraseña-larga"}'
+
+# 2. La titular inicia sesión en su consultorio y usa el token
+AT=$(curl -s -X POST localhost:8080/api/auth/login -H 'X-Tenant: nutri-ana' -H 'Content-Type: application/json' \
+  -d '{"email":"ana@nutriana.mx","password":"una-contraseña-larga"}' | jq -r .accessToken)
+curl -H 'X-Tenant: nutri-ana' -H "Authorization: Bearer $AT" localhost:8080/api/consultorio
 ```
+
+En desarrollo la clave de firma de JWT se genera al arrancar, así que los tokens dejan de servir al reiniciar. En producción viene de `NUTRIKIT_JWT_SECRET` (`openssl rand -base64 32`) y la app no arranca sin ella.
 
 La app se conecta a Postgres con un usuario sin permisos de dueño para que aplique Row-Level Security ([ADR-0004](docs/adr/0004-implementacion-aislamiento-tenant.md)). Si tu base local es anterior a ese cambio, recréala con `docker compose down -v` dentro de `backend/`.
 

@@ -23,8 +23,8 @@ import dev.jorgemiguel.nutrikit.tenants.domain.TenantRepository;
  * subdominios reservados de la plataforma no son consultorios.</li>
  * </ol>
  *
- * <p>El consultorio debe existir y estar activo. Con #8, el consultorio del JWT tendrá que
- * coincidir con el que se resuelve aquí.
+ * <p>El consultorio debe existir y estar activo. Después, Spring Security exige que el
+ * consultorio del JWT coincida con el que se resuelve aquí.
  */
 class ResolutorDeTenant {
 

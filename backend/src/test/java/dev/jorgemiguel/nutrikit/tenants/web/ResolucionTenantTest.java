@@ -2,6 +2,7 @@ package dev.jorgemiguel.nutrikit.tenants.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -18,7 +19,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import dev.jorgemiguel.nutrikit.TestcontainersConfiguration;
@@ -69,6 +72,12 @@ class ResolucionTenantTest {
 		}));
 	}
 
+	/** JWT de un usuario del consultorio indicado; la seguridad exige que coincida con el de la petición. */
+	private static RequestPostProcessor usuarioDe(UUID tenantId) {
+		return jwt().jwt(token -> token.claim("tenant_id", tenantId.toString()).claim("rol", "TITULAR"))
+				.authorities(new SimpleGrantedAuthority("ROLE_TITULAR"));
+	}
+
 	@AfterEach
 	void borrarConsultorios() {
 		jdbc.sql("DELETE FROM tenant WHERE id IN (?, ?, ?)").params(ana, beto, suspendido).update();
@@ -85,7 +94,7 @@ class ResolucionTenantTest {
 
 	@Test
 	void identificaElConsultorioPorCabecera() throws Exception {
-		mvc.perform(get("/api/consultorio").header("X-Tenant", "resolucion-ana"))
+		mvc.perform(get("/api/consultorio").header("X-Tenant", "resolucion-ana").with(usuarioDe(ana)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(ana.toString()))
 				.andExpect(jsonPath("$.slug").value("resolucion-ana"));
@@ -93,7 +102,7 @@ class ResolucionTenantTest {
 
 	@Test
 	void identificaElConsultorioPorSubdominio() throws Exception {
-		mvc.perform(get("/api/consultorio").with(peticion -> {
+		mvc.perform(get("/api/consultorio").with(usuarioDe(beto)).with(peticion -> {
 			peticion.setServerName("resolucion-beto.nutrikit.mx");
 			return peticion;
 		}))
@@ -114,13 +123,13 @@ class ResolucionTenantTest {
 
 	@Test
 	void cadaPeticionVeSoloLosModulosDeSuConsultorio() throws Exception {
-		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-ana"))
+		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-ana").with(usuarioDe(ana)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(1)))
 				.andExpect(jsonPath("$[0].modulo").value("agenda"))
 				.andExpect(jsonPath("$[0].habilitado").value(true));
 
-		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-beto"))
+		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-beto").with(usuarioDe(beto)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(2)))
 				.andExpect(jsonPath("$[0].modulo").value("agenda"))
@@ -129,7 +138,7 @@ class ResolucionTenantTest {
 
 	@Test
 	void elContextoSeLimpiaAlTerminarCadaPeticion() throws Exception {
-		mvc.perform(get("/api/consultorio").header("X-Tenant", "resolucion-ana"))
+		mvc.perform(get("/api/consultorio").header("X-Tenant", "resolucion-ana").with(usuarioDe(ana)))
 				.andExpect(jsonPath("$.slug").value("resolucion-ana"));
 
 		// MockMvc corre la petición en este mismo hilo: si el contexto no se limpiara, seguiría aquí.
@@ -142,7 +151,7 @@ class ResolucionTenantTest {
 
 	@Test
 	void elContextoSeLimpiaAunqueLaPeticionFalle() throws Exception {
-		mvc.perform(get("/api/consultorio/no-existe").header("X-Tenant", "resolucion-ana"))
+		mvc.perform(get("/api/consultorio/no-existe").header("X-Tenant", "resolucion-ana").with(usuarioDe(ana)))
 				.andExpect(status().isNotFound());
 
 		assertThat(TenantContext.actual()).isEmpty();
@@ -150,7 +159,7 @@ class ResolucionTenantTest {
 
 	@Test
 	void lasRutasDeLaPlataformaNoRequierenConsultorio() throws Exception {
-		mvc.perform(get("/api/operador/tenants"))
+		mvc.perform(get("/api/operador/tenants").with(jwt().authorities(new SimpleGrantedAuthority("ROLE_OPERADOR"))))
 				.andExpect(status().isOk());
 	}
 
