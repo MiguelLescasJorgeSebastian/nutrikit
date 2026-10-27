@@ -1,7 +1,6 @@
 package dev.jorgemiguel.nutrikit.iam.infrastructure;
 
 import java.security.SecureRandom;
-import java.time.Clock;
 import java.util.Base64;
 
 import javax.crypto.SecretKey;
@@ -9,7 +8,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,12 +79,6 @@ class JwtConfig {
 	@Bean
 	PasswordEncoder passwordEncoder() {
 		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Clock clock() {
-		return Clock.systemUTC();
 	}
 
 }
