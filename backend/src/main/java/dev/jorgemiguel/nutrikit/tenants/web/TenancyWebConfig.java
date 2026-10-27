@@ -26,8 +26,10 @@ class TenancyWebConfig {
 		var filtro = new ResolucionTenantFilter(new ResolutorDeTenant(repository, properties), manejadorDeErrores);
 		var registro = new FilterRegistrationBean<>(filtro);
 		registro.addUrlPatterns("/api/*");
-		// Después de Spring Security: en #8 el JWT ya estará validado al resolver el consultorio.
-		registro.setOrder(SecurityFilterProperties.DEFAULT_FILTER_ORDER + 10);
+		// Antes de Spring Security: al autorizar, el consultorio de la petición ya está en
+		// TenantContext y se puede comparar con el del JWT. El inicio de sesión también lo necesita
+		// para buscar al usuario en su consultorio.
+		registro.setOrder(SecurityFilterProperties.DEFAULT_FILTER_ORDER - 10);
 		return registro;
 	}
 

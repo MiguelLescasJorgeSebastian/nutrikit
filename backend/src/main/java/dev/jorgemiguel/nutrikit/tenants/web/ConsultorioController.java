@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ProblemDetail;
@@ -21,13 +22,17 @@ import dev.jorgemiguel.nutrikit.tenants.application.ConsultorioActualService;
  * Datos del consultorio de la petición, identificado por subdominio o por la cabecera
  * {@code X-Tenant} en desarrollo (ver {@link ResolucionTenantFilter}).
  *
- * <p>Seguridad: {@code /api/consultorio/**} queda abierto mientras llega #8; ahí debe exigir un
- * JWT cuyo consultorio coincida con el de la petición.
+ * <p>Exige un JWT del mismo consultorio que la petición.
  */
 @Tag(name = "Consultorio actual", description = "Datos del consultorio identificado por subdominio")
+@SecurityRequirement(name = "bearer")
 @ApiResponse(responseCode = "400", description = "La petición no identifica un consultorio",
 		content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
 @ApiResponse(responseCode = "404", description = "El consultorio no existe o no está activo",
+		content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+@ApiResponse(responseCode = "401", description = "Sin access token o token inválido",
+		content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+@ApiResponse(responseCode = "403", description = "El token es de otro consultorio",
 		content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
 @RestController
 @RequestMapping("/api/consultorio")
