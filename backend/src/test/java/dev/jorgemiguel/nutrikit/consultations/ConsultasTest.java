@@ -126,9 +126,13 @@ class ConsultasTest {
 		@Test
 		void elCatalogoTraeLosIndicadoresGlobalesBase() throws Exception {
 			mvc.perform(titular(get("/api/indicadores"))).andExpect(status().isOk())
-					.andExpect(jsonPath("$[?(@.global == true)].codigo").value(org.hamcrest.Matchers.containsInAnyOrder(
-							"peso", "talla", "circunferencia_cintura", "circunferencia_cadera", "porcentaje_grasa",
-							"porcentaje_musculo", "grasa_visceral", "agua_corporal")));
+					.andExpect(jsonPath("$[?(@.global == true && @.calculado == false)].codigo").value(
+							org.hamcrest.Matchers.containsInAnyOrder("peso", "talla", "circunferencia_cintura",
+									"circunferencia_cadera", "porcentaje_grasa", "porcentaje_musculo", "grasa_visceral",
+									"agua_corporal")))
+					// Los calculados (#24) también son globales.
+					.andExpect(jsonPath("$[?(@.calculado == true)].codigo").value(org.hamcrest.Matchers.containsInAnyOrder(
+							"imc", "indice_cintura_cadera", "gasto_energetico_basal")));
 		}
 
 		@Test
@@ -190,7 +194,10 @@ class ConsultasTest {
 			mvc.perform(titular(get(alta.andReturn().getResponse().getHeader("Location"))))
 					.andExpect(status().isOk())
 					.andExpect(jsonPath("$.notas").value("Buena adherencia al plan"))
-					.andExpect(jsonPath("$.mediciones", hasSize(3)))
+					// 3 capturadas y, como hay peso, talla, edad y sexo, IMC y gasto energético calculados (#24).
+					.andExpect(jsonPath("$.mediciones", hasSize(5)))
+					.andExpect(jsonPath("$.mediciones[?(@.origen == 'CALCULADO')].indicador",
+							org.hamcrest.Matchers.containsInAnyOrder("imc", "gasto_energetico_basal")))
 					.andExpect(jsonPath("$.mediciones[0].indicador").value("peso"))
 					.andExpect(jsonPath("$.mediciones[0].valor").value(72.4))
 					.andExpect(jsonPath("$.mediciones[0].unidad").value("kg"))
