@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import dev.jorgemiguel.nutrikit.TestcontainersConfiguration;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
+import dev.jorgemiguel.nutrikit.tenants.ModuloDelConsultorio;
 import dev.jorgemiguel.nutrikit.tenants.domain.Slug;
 import dev.jorgemiguel.nutrikit.tenants.domain.Tenant;
 import dev.jorgemiguel.nutrikit.tenants.domain.TenantModulo;
@@ -65,10 +66,10 @@ class ResolucionTenantTest {
 		pausado.suspender();
 		suspendido = tenants.save(pausado).getId();
 
-		TenantContext.ejecutarComo(ana, () -> tx.executeWithoutResult(e -> modulos.save(TenantModulo.registrar("agenda", true))));
+		TenantContext.ejecutarComo(ana, () -> tx.executeWithoutResult(e -> modulos.save(TenantModulo.registrar(ModuloDelConsultorio.AGENDA, true))));
 		TenantContext.ejecutarComo(beto, () -> tx.executeWithoutResult(e -> {
-			modulos.save(TenantModulo.registrar("agenda", false));
-			modulos.save(TenantModulo.registrar("planes", true));
+			modulos.save(TenantModulo.registrar(ModuloDelConsultorio.AGENDA, false));
+			modulos.save(TenantModulo.registrar(ModuloDelConsultorio.PLANES_DE_ALIMENTACION, true));
 		}));
 	}
 
@@ -126,14 +127,16 @@ class ResolucionTenantTest {
 		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-ana").with(usuarioDe(ana)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(1)))
-				.andExpect(jsonPath("$[0].modulo").value("agenda"))
+				.andExpect(jsonPath("$[0].modulo").value("scheduling"))
 				.andExpect(jsonPath("$[0].habilitado").value(true));
 
 		mvc.perform(get("/api/consultorio/modulos").header("X-Tenant", "resolucion-beto").with(usuarioDe(beto)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(2)))
-				.andExpect(jsonPath("$[0].modulo").value("agenda"))
-				.andExpect(jsonPath("$[0].habilitado").value(false));
+				.andExpect(jsonPath("$[0].modulo").value("mealplans"))
+				.andExpect(jsonPath("$[0].habilitado").value(true))
+				.andExpect(jsonPath("$[1].modulo").value("scheduling"))
+				.andExpect(jsonPath("$[1].habilitado").value(false));
 	}
 
 	@Test

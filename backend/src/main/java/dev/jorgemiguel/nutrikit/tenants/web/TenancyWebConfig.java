@@ -7,11 +7,14 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import dev.jorgemiguel.nutrikit.tenants.application.ModulosEncendidos;
 import dev.jorgemiguel.nutrikit.tenants.domain.TenantRepository;
 
 /**
- * Registra el filtro de resolución de consultorio. Va en un {@code FilterRegistrationBean} y no
+ * Registra el filtro de resolución de consultorio y el interceptor de módulos apagados. Va en un {@code FilterRegistrationBean} y no
  * como {@code @Component} para controlar el orden y para que las pruebas {@code @WebMvcTest}
  * no lo carguen sin necesitarlo.
  */
@@ -31,6 +34,21 @@ class TenancyWebConfig {
 		// para buscar al usuario en su consultorio.
 		registro.setOrder(SecurityFilterProperties.DEFAULT_FILTER_ORDER - 10);
 		return registro;
+	}
+
+	/**
+	 * Registra el interceptor de módulos apagados. Se declara como {@code @Bean} aquí, y no con una
+	 * clase que implemente {@code WebMvcConfigurer}, para que las pruebas {@code @WebMvcTest} no lo
+	 * carguen sin la base de datos que necesita.
+	 */
+	@Bean
+	WebMvcConfigurer interceptorDeModulosApagados(ModulosEncendidos encendidos) {
+		return new WebMvcConfigurer() {
+			@Override
+			public void addInterceptors(InterceptorRegistry registro) {
+				registro.addInterceptor(new ModuloApagadoInterceptor(encendidos)).addPathPatterns("/api/**");
+			}
+		};
 	}
 
 }

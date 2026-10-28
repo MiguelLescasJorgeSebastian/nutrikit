@@ -14,6 +14,7 @@ import org.hibernate.annotations.Filter;
 
 import dev.jorgemiguel.nutrikit.shared.FiltroDeTenant;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
+import dev.jorgemiguel.nutrikit.tenants.ModuloDelConsultorio;
 
 /**
  * Un módulo del sistema (pacientes, consultas, agenda...) y si está encendido para el consultorio.
@@ -53,13 +54,32 @@ public class TenantModulo {
 
 	/**
 	 * Registra un módulo para el consultorio actual. El {@code tenant_id} sale siempre del
-	 * contexto, nunca de la entrada del usuario.
+	 * contexto, nunca de la entrada del usuario. Un módulo de núcleo siempre queda encendido.
 	 */
-	public static TenantModulo registrar(String modulo, boolean habilitado) {
-		if (modulo == null || modulo.isBlank() || modulo.length() > 40) {
-			throw new IllegalArgumentException("El nombre del módulo es obligatorio y admite máximo 40 caracteres");
+	public static TenantModulo registrar(ModuloDelConsultorio modulo, boolean habilitado) {
+		return new TenantModulo(TenantContext.requerido(), modulo.codigo(), modulo.nucleo() || habilitado);
+	}
+
+	/**
+	 * @return si el estado cambió
+	 * @throws ModuloDeNucleoException si se intenta apagar un módulo de núcleo
+	 */
+	public boolean cambiar(boolean encender) {
+		ModuloDelConsultorio catalogo = getCatalogo();
+		if (!encender && catalogo.nucleo()) {
+			throw new ModuloDeNucleoException(catalogo);
 		}
-		return new TenantModulo(TenantContext.requerido(), modulo, habilitado);
+		if (habilitado == encender) {
+			return false;
+		}
+		habilitado = encender;
+		actualizadoEn = Instant.now();
+		return true;
+	}
+
+	public ModuloDelConsultorio getCatalogo() {
+		return ModuloDelConsultorio.deCodigo(modulo)
+				.orElseThrow(() -> new IllegalStateException("Módulo fuera del catálogo: " + modulo));
 	}
 
 	public UUID getTenantId() {

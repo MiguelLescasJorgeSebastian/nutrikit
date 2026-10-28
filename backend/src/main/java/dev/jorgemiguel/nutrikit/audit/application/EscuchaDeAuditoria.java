@@ -10,6 +10,7 @@ import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
 import dev.jorgemiguel.nutrikit.tenants.EstadoDeTenantCambiado;
+import dev.jorgemiguel.nutrikit.tenants.ModuloDeConsultorioCambiado;
 import dev.jorgemiguel.nutrikit.tenants.TenantCreado;
 
 /**
@@ -63,6 +64,14 @@ class EscuchaDeAuditoria {
 	public void on(InicioDeSesionFallido evento) {
 		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.LOGIN_FALLIDO,
 				Acciones.RECURSO_USUARIO, evento.usuarioId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(ModuloDeConsultorioCambiado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(),
+				evento.habilitado() ? Acciones.MODULO_ENCENDIDO : Acciones.MODULO_APAGADO,
+				Acciones.recursoModulo(evento.modulo().codigo()), null, evento.ocurridoEn()));
 	}
 
 	private void registrar(RegistroDeAuditoria registro) {
