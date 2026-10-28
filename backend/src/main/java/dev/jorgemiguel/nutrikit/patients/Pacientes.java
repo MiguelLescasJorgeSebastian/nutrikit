@@ -1,5 +1,6 @@
 package dev.jorgemiguel.nutrikit.patients;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -17,5 +18,8 @@ public interface Pacientes {
 	 * Cualquier módulo que guarde datos de salud debe preguntarlo antes de escribir.
 	 */
 	boolean tieneConsentimientoVigente(UUID pacienteId);
+
+	/** Fecha de nacimiento y sexo de un paciente activo; vacío si no existe o está dado de baja. */
+	Optional<PerfilClinico> perfilClinico(UUID pacienteId);
 
 }

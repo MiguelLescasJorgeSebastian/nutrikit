@@ -1,11 +1,13 @@
 package dev.jorgemiguel.nutrikit.patients.application;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jorgemiguel.nutrikit.patients.Pacientes;
+import dev.jorgemiguel.nutrikit.patients.PerfilClinico;
 import dev.jorgemiguel.nutrikit.patients.domain.Consentimiento;
 import dev.jorgemiguel.nutrikit.patients.domain.ConsentimientoRepository;
 import dev.jorgemiguel.nutrikit.patients.domain.PacienteRepository;
@@ -25,6 +27,12 @@ class PacientesAdapter implements Pacientes {
 	@Override
 	public boolean estaActivo(UUID pacienteId) {
 		return pacientes.findById(pacienteId).isPresent();
+	}
+
+	@Override
+	public Optional<PerfilClinico> perfilClinico(UUID pacienteId) {
+		return pacientes.findById(pacienteId)
+				.map(paciente -> new PerfilClinico(paciente.getFechaNacimiento(), paciente.getSexo().name()));
 	}
 
 	@Override

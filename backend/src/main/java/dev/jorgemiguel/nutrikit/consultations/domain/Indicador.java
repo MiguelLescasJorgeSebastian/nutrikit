@@ -89,15 +89,24 @@ public class Indicador {
 		if (valor == null) {
 			throw new MedicionInvalidaException(codigo, "el valor es obligatorio");
 		}
-		BigDecimal limpio = valor.stripTrailingZeros();
+		BigDecimal limpio = sinCerosSobrantes(valor);
 		if (limpio.scale() > ESCALA) {
 			throw new MedicionInvalidaException(codigo, "admite máximo %d decimales".formatted(ESCALA));
 		}
 		if (limpio.compareTo(valorMinimo) < 0 || limpio.compareTo(valorMaximo) > 0) {
 			throw new MedicionInvalidaException(codigo, "debe estar entre %s y %s %s"
-					.formatted(valorMinimo.stripTrailingZeros().toPlainString(), valorMaximo.stripTrailingZeros().toPlainString(), unidad));
+					.formatted(sinCerosSobrantes(valorMinimo).toPlainString(), sinCerosSobrantes(valorMaximo).toPlainString(), unidad));
 		}
 		return limpio;
+	}
+
+	/**
+	 * 72.40 → 72.4, pero 80 → 80 y no 8E+1: {@code stripTrailingZeros} sola cambia a notación
+	 * científica y así se serializaría en JSON.
+	 */
+	public static BigDecimal sinCerosSobrantes(BigDecimal valor) {
+		BigDecimal limpio = valor.stripTrailingZeros();
+		return limpio.scale() < 0 ? limpio.setScale(0) : limpio;
 	}
 
 	public boolean esGlobal() {

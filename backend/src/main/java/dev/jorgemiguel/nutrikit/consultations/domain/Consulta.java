@@ -100,6 +100,9 @@ public class Consulta {
 	 * está fuera de rango
 	 */
 	public Medicion medir(Indicador indicador, BigDecimal valor, OrigenMedicion origen) {
+		if (indicador.isCalculado()) {
+			throw new MedicionInvalidaException(indicador.getCodigo(), "se calcula automáticamente; no se captura a mano");
+		}
 		if (mediciones.stream().anyMatch(m -> m.getIndicadorId().equals(indicador.getId()))) {
 			throw new MedicionInvalidaException(indicador.getCodigo(), "se repite en la consulta; cada indicador va una sola vez");
 		}
@@ -109,6 +112,43 @@ public class Consulta {
 		var medicion = new Medicion(this, indicador.getId(), indicador.validar(valor), origen);
 		mediciones.add(medicion);
 		return medicion;
+	}
+
+	/**
+	 * Corrige el valor de una medición capturada. Las calculadas no se corrigen: se recalculan.
+	 *
+	 * @throws MedicionInvalidaException si el indicador es calculado o el valor está fuera de rango
+	 * @throws java.util.NoSuchElementException si la consulta no tiene esa medición
+	 */
+	public void corregir(Indicador indicador, BigDecimal valor) {
+		if (indicador.isCalculado()) {
+			throw new MedicionInvalidaException(indicador.getCodigo(), "se calcula automáticamente; no se corrige a mano");
+		}
+		Medicion medicion = medicionDe(indicador.getId()).orElseThrow();
+		medicion.cambiarValor(indicador.validar(valor));
+	}
+
+	/**
+	 * Guarda o actualiza un indicador derivado. No valida rango: se calcula de valores ya
+	 * validados.
+	 */
+	public void registrarCalculado(Indicador indicador, BigDecimal valor) {
+		if (!indicador.isCalculado()) {
+			throw new IllegalArgumentException("Solo los indicadores calculados se registran así: " + indicador.getCodigo());
+		}
+		medicionDe(indicador.getId()).ifPresentOrElse(
+				existente -> existente.cambiarValor(valor),
+				() -> mediciones.add(new Medicion(this, indicador.getId(), valor, OrigenMedicion.CALCULADO)));
+	}
+
+	/** Valores capturados (no calculados), por id de indicador: la entrada de los cálculos. */
+	public java.util.Map<UUID, BigDecimal> valoresCapturados() {
+		return mediciones.stream().filter(m -> !m.esCalculada())
+				.collect(java.util.stream.Collectors.toMap(Medicion::getIndicadorId, Medicion::getValor));
+	}
+
+	private java.util.Optional<Medicion> medicionDe(UUID indicadorId) {
+		return mediciones.stream().filter(m -> m.getIndicadorId().equals(indicadorId)).findFirst();
 	}
 
 	private static String opcional(String campo, String valor, int maximo) {

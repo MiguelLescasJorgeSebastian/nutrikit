@@ -19,6 +19,7 @@ public final class Acciones {
 	public static final String AVISO_DE_PRIVACIDAD_PUBLICADO = "AVISO_PRIVACIDAD_PUBLICADO";
 	public static final String CONSULTA_REGISTRADA = "CONSULTA_REGISTRADA";
 	public static final String INDICADOR_CREADO = "INDICADOR_CREADO";
+	public static final String MEDICION_CORREGIDA = "MEDICION_CORREGIDA";
 
 	public static final String RECURSO_TENANT = "TENANT";
 	public static final String RECURSO_USUARIO = "USUARIO";

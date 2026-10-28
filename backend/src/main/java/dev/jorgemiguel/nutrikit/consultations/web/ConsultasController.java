@@ -22,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +68,19 @@ class ConsultasController {
 		return ResponseEntity.created(ubicacion).body(ConsultaResponse.de(consulta, service.indicadoresDe(List.of(consulta))));
 	}
 
+	@Operation(summary = "Corregir una medición capturada",
+			description = "Cambia su valor y recalcula los indicadores derivados (IMC, cintura-cadera, gasto energético). "
+					+ "Los indicadores calculados no se corrigen a mano.")
+	@ApiResponse(responseCode = "200", description = "Consulta con la medición corregida y sus derivados recalculados")
+	@ApiResponse(responseCode = "400", description = "Indicador calculado o desconocido, o valor fuera de rango",
+			content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+	@PutMapping("/api/consultas/{consultaId}/mediciones/{indicador}")
+	ConsultaResponse corregir(@PathVariable UUID consultaId, @PathVariable String indicador,
+			@RequestBody Correccion correccion) {
+		Consulta consulta = service.corregir(consultaId, indicador, correccion.valor());
+		return ConsultaResponse.de(consulta, service.indicadoresDe(List.of(consulta)));
+	}
+
 	@Operation(summary = "Ver una consulta")
 	@GetMapping("/api/consultas/{consultaId}")
 	ConsultaResponse obtener(@PathVariable UUID consultaId) {
@@ -98,6 +112,10 @@ class ConsultasController {
 
 	}
 
+	@Schema(name = "CorreccionDeMedicion")
+	record Correccion(@Schema(example = "71.8") BigDecimal valor) {
+	}
+
 	@Schema(name = "NuevaMedicion")
 	record NuevaMedicion(@Schema(example = "peso") String indicador, @Schema(example = "72.4") BigDecimal valor) {
 	}
@@ -112,7 +130,7 @@ class ConsultasController {
 					consulta.getMediciones().stream().map(m -> {
 						Indicador indicador = indicadores.get(m.getIndicadorId());
 						return new MedicionResponse(indicador.getCodigo(), indicador.getNombre(), indicador.getUnidad(),
-								m.getValor().stripTrailingZeros(), m.getOrigen());
+								Indicador.sinCerosSobrantes(m.getValor()), m.getOrigen());
 					}).toList());
 		}
 
