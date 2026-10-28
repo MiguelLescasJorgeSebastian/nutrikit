@@ -9,6 +9,9 @@ public enum TipoDeActor {
 	/** Operador de la plataforma. */
 	OPERADOR,
 
+	/** Paciente que entra por su enlace privado (sin cuenta). */
+	PACIENTE,
+
 	/** Petición sin sesión, por ejemplo un inicio de sesión fallido. */
 	ANONIMO,
 

@@ -1,8 +1,9 @@
 /**
- * Módulo Acceso del paciente: enlaces privados sin registro, con PIN opcional.
+ * Módulo Acceso del paciente: el paciente ve su página entrando con un enlace privado, sin crear
+ * cuenta (ADR-0003, ADR-0014).
  *
- * <p>Fase 1. Solo exponer en la raíz de este paquete la API pública del módulo;
- * el resto va en subpaquetes internos (domain, application, infrastructure, web).
+ * <p>Módulo opcional (encendido por defecto). Lee los datos del paciente y de sus consultas por las
+ * APIs públicas de {@code patients} y {@code consultations}; nunca por sus clases internas.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Acceso del paciente")
 package dev.jorgemiguel.nutrikit.patientaccess;

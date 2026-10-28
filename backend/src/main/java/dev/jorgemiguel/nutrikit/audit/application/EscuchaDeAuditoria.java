@@ -11,6 +11,11 @@ import dev.jorgemiguel.nutrikit.consultations.IndicadorCreado;
 import dev.jorgemiguel.nutrikit.consultations.MedicionCorregida;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
+import dev.jorgemiguel.nutrikit.patientaccess.AccesoPorEnlace;
+import dev.jorgemiguel.nutrikit.patientaccess.AccesoPorEnlaceRechazado;
+import dev.jorgemiguel.nutrikit.patientaccess.EnlaceConfigurado;
+import dev.jorgemiguel.nutrikit.patientaccess.EnlaceGenerado;
+import dev.jorgemiguel.nutrikit.patientaccess.EnlaceRevocado;
 import dev.jorgemiguel.nutrikit.patients.AvisoDePrivacidadPublicado;
 import dev.jorgemiguel.nutrikit.patients.ConsentimientoOtorgado;
 import dev.jorgemiguel.nutrikit.patients.ConsentimientoRetirado;
@@ -160,6 +165,41 @@ class EscuchaDeAuditoria {
 	public void on(MedicionCorregida evento) {
 		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.MEDICION_CORREGIDA,
 				Acciones.RECURSO_CONSULTA, evento.consultaId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(EnlaceGenerado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.ENLACE_GENERADO,
+				Acciones.RECURSO_ENLACE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(EnlaceRevocado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.ENLACE_REVOCADO,
+				Acciones.RECURSO_ENLACE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(EnlaceConfigurado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.ENLACE_CONFIGURADO,
+				Acciones.RECURSO_ENLACE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(AccesoPorEnlace evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.ACCESO_PACIENTE,
+				Acciones.RECURSO_ENLACE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(AccesoPorEnlaceRechazado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.ACCESO_PACIENTE_RECHAZADO,
+				Acciones.RECURSO_ENLACE, evento.pacienteId(), evento.ocurridoEn()));
 	}
 
 	private void registrar(RegistroDeAuditoria registro) {
