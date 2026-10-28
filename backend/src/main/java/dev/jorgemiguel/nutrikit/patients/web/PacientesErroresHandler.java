@@ -7,6 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import dev.jorgemiguel.nutrikit.patients.application.ConflictoDeConsentimientoException;
 import dev.jorgemiguel.nutrikit.patients.application.PacienteNoEncontradoException;
 import dev.jorgemiguel.nutrikit.patients.application.VersionDesactualizadaException;
 import dev.jorgemiguel.nutrikit.patients.domain.DatoInvalidoException;
@@ -29,6 +30,20 @@ class PacientesErroresHandler {
 	ProblemDetail noEncontrado(PacienteNoEncontradoException e) {
 		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 		problema.setTitle("Paciente no encontrado");
+		return problema;
+	}
+
+	@ExceptionHandler
+	ProblemDetail conflictoDeConsentimiento(ConflictoDeConsentimientoException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+		problema.setTitle(e.getTitulo());
+		return problema;
+	}
+
+	@ExceptionHandler
+	ProblemDetail avisoNoPublicado(AvisosDePrivacidadController.AvisoNoPublicadoException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problema.setTitle("Sin aviso de privacidad");
 		return problema;
 	}
 
