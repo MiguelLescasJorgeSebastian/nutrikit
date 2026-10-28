@@ -56,8 +56,9 @@ class AislamientoTenantTest {
 		ana = tenants.save(Tenant.crear(Slug.of("aislamiento-ana"), "Consultorio Ana")).getId();
 		beto = tenants.save(Tenant.crear(Slug.of("aislamiento-beto"), "Consultorio Beto")).getId();
 
-		registrarModulos(ana, "agenda", "pacientes");
-		registrarModulos(beto, "agenda", "sitio-web", "planes");
+		registrarModulos(ana, ModuloDelConsultorio.AGENDA, ModuloDelConsultorio.PACIENTES);
+		registrarModulos(beto, ModuloDelConsultorio.AGENDA, ModuloDelConsultorio.SITIO_WEB,
+				ModuloDelConsultorio.PLANES_DE_ALIMENTACION);
 	}
 
 	@AfterEach
@@ -66,9 +67,9 @@ class AislamientoTenantTest {
 		jdbc.sql("DELETE FROM tenant WHERE id IN (?, ?)").params(ana, beto).update();
 	}
 
-	private void registrarModulos(UUID tenantId, String... nombres) {
+	private void registrarModulos(UUID tenantId, ModuloDelConsultorio... nombres) {
 		TenantContext.ejecutarComo(tenantId, () -> tx.executeWithoutResult(estado -> {
-			for (String nombre : nombres) {
+			for (ModuloDelConsultorio nombre : nombres) {
 				modulos.save(TenantModulo.registrar(nombre, true));
 			}
 		}));
@@ -83,14 +84,14 @@ class AislamientoTenantTest {
 		List<TenantModulo> deAna = comoConsultorio(ana, modulos::findAllByOrderByModuloAsc);
 		List<TenantModulo> deBeto = comoConsultorio(beto, modulos::findAllByOrderByModuloAsc);
 
-		assertThat(deAna).extracting(TenantModulo::getModulo).containsExactly("agenda", "pacientes");
+		assertThat(deAna).extracting(TenantModulo::getModulo).containsExactly("patients", "scheduling");
 		assertThat(deAna).allSatisfy(m -> assertThat(m.getTenantId()).isEqualTo(ana));
-		assertThat(deBeto).extracting(TenantModulo::getModulo).containsExactly("agenda", "planes", "sitio-web");
+		assertThat(deBeto).extracting(TenantModulo::getModulo).containsExactly("mealplans", "scheduling", "website");
 	}
 
 	@Test
 	void findByIdNoDevuelveElRegistroDeOtroConsultorio() {
-		var llaveDeBeto = new TenantModulo.Llave(beto, "planes");
+		var llaveDeBeto = new TenantModulo.Llave(beto, "mealplans");
 
 		assertThat(comoConsultorio(ana, () -> modulos.findById(llaveDeBeto))).isEmpty();
 		assertThat(comoConsultorio(beto, () -> modulos.findById(llaveDeBeto))).isPresent();
@@ -138,7 +139,7 @@ class AislamientoTenantTest {
 	@Test
 	void rlsImpideEscribirDatosDeOtroConsultorio() {
 		assertThatThrownBy(() -> TenantContext.ejecutarComo(ana, () -> tx.executeWithoutResult(estado ->
-				jdbc.sql("INSERT INTO tenant_modulo (tenant_id, modulo) VALUES (?, 'intruso')").param(beto).update())))
+				jdbc.sql("INSERT INTO tenant_modulo (tenant_id, modulo) VALUES (?, 'integrations')").param(beto).update())))
 				.rootCause().hasMessageContaining("violates row-level security policy");
 	}
 
