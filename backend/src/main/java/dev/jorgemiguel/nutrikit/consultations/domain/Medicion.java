@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -26,6 +27,9 @@ import dev.jorgemiguel.nutrikit.shared.FiltroDeTenant;
 @Entity
 @Table(name = "medicion")
 @Filter(name = FiltroDeTenant.NOMBRE)
+// Corregir solo cambia el valor: el UPDATE incluye únicamente esa columna, la única que la app
+// tiene permiso de modificar (V11).
+@DynamicUpdate
 public class Medicion {
 
 	@Id
@@ -48,10 +52,10 @@ public class Medicion {
 	private BigDecimal valor;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 15)
+	@Column(nullable = false, length = 15, updatable = false)
 	private OrigenMedicion origen;
 
-	@Column(name = "importacion_id")
+	@Column(name = "importacion_id", updatable = false)
 	private UUID importacionId;
 
 	/** Solo para Hibernate. */
@@ -64,6 +68,14 @@ public class Medicion {
 		this.indicadorId = indicadorId;
 		this.valor = valor;
 		this.origen = origen;
+	}
+
+	void cambiarValor(BigDecimal nuevo) {
+		this.valor = nuevo;
+	}
+
+	public boolean esCalculada() {
+		return origen == OrigenMedicion.CALCULADO;
 	}
 
 	public UUID getId() {

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jorgemiguel.nutrikit.consultations.ConsultaRegistrada;
+import dev.jorgemiguel.nutrikit.consultations.MedicionCorregida;
 import dev.jorgemiguel.nutrikit.consultations.domain.Consulta;
 import dev.jorgemiguel.nutrikit.consultations.domain.ConsultaRepository;
 import dev.jorgemiguel.nutrikit.consultations.domain.Indicador;
@@ -41,14 +42,16 @@ public class ConsultaService {
 	private final ConsultaRepository consultas;
 	private final IndicadorRepository indicadores;
 	private final Pacientes pacientes;
+	private final DerivadosDeConsulta derivados;
 	private final ApplicationEventPublisher eventos;
 	private final Clock clock;
 
 	ConsultaService(ConsultaRepository consultas, IndicadorRepository indicadores, Pacientes pacientes,
-			ApplicationEventPublisher eventos, Clock clock) {
+			DerivadosDeConsulta derivados, ApplicationEventPublisher eventos, Clock clock) {
 		this.consultas = consultas;
 		this.indicadores = indicadores;
 		this.pacientes = pacientes;
+		this.derivados = derivados;
 		this.eventos = eventos;
 		this.clock = clock;
 	}
@@ -64,10 +67,7 @@ public class ConsultaService {
 	 */
 	public Consulta registrar(UUID pacienteId, Instant fecha, String motivo, String notas, List<MedicionPedida> pedidas) {
 		exigirPacienteActivo(pacienteId);
-		if (!pacientes.tieneConsentimientoVigente(pacienteId)) {
-			throw new ConflictoDeConsultaException("Consentimiento requerido",
-					"El paciente no tiene un consentimiento vigente para el tratamiento de sus datos de salud.");
-		}
+		exigirConsentimiento(pacienteId);
 		Origen origen = Origen.actual();
 		Consulta consulta = Consulta.registrar(pacienteId, origen.actorId(), fecha, motivo, notas, clock.instant());
 		Map<String, Indicador> porCodigo = indicadoresPorCodigo(pedidas);
@@ -78,8 +78,34 @@ public class ConsultaService {
 			}
 			consulta.medir(indicador, pedida.valor(), OrigenMedicion.MANUAL);
 		}
+		derivados.recalcular(consulta);
 		consulta = consultas.save(consulta);
 		eventos.publishEvent(new ConsultaRegistrada(consulta.getTenantId(), consulta.getId(), pacienteId, origen,
+				clock.instant()));
+		return consulta;
+	}
+
+	/**
+	 * Corrige el valor de una medición capturada y recalcula los derivados que dependen de ella.
+	 *
+	 * @throws MedicionInvalidaException si el indicador es calculado, desconocido o el valor está fuera de rango
+	 * @throws ConsultaNoDisponibleException si la consulta no tiene esa medición
+	 */
+	public Consulta corregir(UUID consultaId, String codigoIndicador, BigDecimal valor) {
+		Consulta consulta = obtener(consultaId);
+		exigirPacienteActivo(consulta.getPacienteId());
+		exigirConsentimiento(consulta.getPacienteId());
+		Indicador indicador = indicadores.findByCodigoIn(List.of(codigoIndicador)).stream().findFirst()
+				.orElseThrow(() -> new MedicionInvalidaException("indicador", "no existe el indicador '%s'".formatted(codigoIndicador)));
+		try {
+			consulta.corregir(indicador, valor);
+		}
+		catch (java.util.NoSuchElementException e) {
+			throw new ConsultaNoDisponibleException("Medición no encontrada",
+					"La consulta no tiene una medición de '%s'".formatted(codigoIndicador));
+		}
+		derivados.recalcular(consulta);
+		eventos.publishEvent(new MedicionCorregida(consulta.getTenantId(), consultaId, codigoIndicador, Origen.actual(),
 				clock.instant()));
 		return consulta;
 	}
@@ -112,6 +138,13 @@ public class ConsultaService {
 		var codigos = pedidas.stream().map(MedicionPedida::indicador).distinct().toList();
 		return codigos.isEmpty() ? Map.of()
 				: indicadores.findByCodigoIn(codigos).stream().collect(Collectors.toMap(Indicador::getCodigo, Function.identity()));
+	}
+
+	private void exigirConsentimiento(UUID pacienteId) {
+		if (!pacientes.tieneConsentimientoVigente(pacienteId)) {
+			throw new ConflictoDeConsultaException("Consentimiento requerido",
+					"El paciente no tiene un consentimiento vigente para el tratamiento de sus datos de salud.");
+		}
 	}
 
 	private void exigirPacienteActivo(UUID pacienteId) {

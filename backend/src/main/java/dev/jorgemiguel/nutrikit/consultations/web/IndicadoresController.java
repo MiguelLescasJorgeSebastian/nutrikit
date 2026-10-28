@@ -73,7 +73,7 @@ class IndicadoresController {
 
 		static IndicadorResponse de(Indicador i) {
 			return new IndicadorResponse(i.getId(), i.getCodigo(), i.getNombre(), i.getUnidad(), i.esGlobal(),
-					i.isCalculado(), i.getValorMinimo().stripTrailingZeros(), i.getValorMaximo().stripTrailingZeros());
+					i.isCalculado(), Indicador.sinCerosSobrantes(i.getValorMinimo()), Indicador.sinCerosSobrantes(i.getValorMaximo()));
 		}
 
 	}
