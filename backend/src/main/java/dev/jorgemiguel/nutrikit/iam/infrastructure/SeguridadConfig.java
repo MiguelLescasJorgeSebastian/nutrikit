@@ -3,6 +3,7 @@ package dev.jorgemiguel.nutrikit.iam.infrastructure;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -26,6 +27,9 @@ import tools.jackson.databind.json.JsonMapper;
  * </table>
  */
 @Configuration(proxyBeanMethods = false)
+// @PreAuthorize en controladores: reglas por rol dentro del consultorio (por ejemplo, quién da de
+// baja un paciente).
+@EnableMethodSecurity
 public class SeguridadConfig {
 
 	@Bean

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -67,6 +68,18 @@ class ManejadorErroresApi extends ResponseEntityExceptionHandler {
 		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
 				"No se puede ordenar por '%s'".formatted(e.getPropertyName()));
 		problema.setTitle("Parámetro de orden inválido");
+		return problema;
+	}
+
+	/**
+	 * Dos transacciones editaron la misma fila a la vez ({@code @Version}): la segunda en hacer
+	 * commit falla. El cliente debe recargar y decidir.
+	 */
+	@ExceptionHandler
+	ProblemDetail edicionSimultanea(ObjectOptimisticLockingFailureException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+				"Alguien más modificó este registro al mismo tiempo. Recarga sus datos y vuelve a intentarlo.");
+		problema.setTitle("Edición en conflicto");
 		return problema;
 	}
 
