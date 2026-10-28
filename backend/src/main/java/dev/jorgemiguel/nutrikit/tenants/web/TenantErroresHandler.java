@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import dev.jorgemiguel.nutrikit.shared.ErrorDeCampo;
+import dev.jorgemiguel.nutrikit.tenants.application.ModuloDesconocidoException;
 import dev.jorgemiguel.nutrikit.tenants.application.TenantNoEncontradoException;
+import dev.jorgemiguel.nutrikit.tenants.domain.ModuloDeNucleoException;
 import dev.jorgemiguel.nutrikit.tenants.domain.SlugDuplicadoException;
 import dev.jorgemiguel.nutrikit.tenants.domain.SlugInvalidoException;
 import dev.jorgemiguel.nutrikit.tenants.domain.TransicionDeEstadoInvalidaException;
@@ -39,6 +41,21 @@ class TenantErroresHandler {
 		problema.setTitle("Cambio de estado no permitido");
 		problema.setProperty("estadoActual", e.getOrigen());
 		problema.setProperty("estadoSolicitado", e.getDestino());
+		return problema;
+	}
+
+	@ExceptionHandler
+	ProblemDetail moduloDeNucleo(ModuloDeNucleoException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+		problema.setTitle("Módulo de núcleo");
+		problema.setProperty("modulo", e.getModulo().codigo());
+		return problema;
+	}
+
+	@ExceptionHandler
+	ProblemDetail moduloDesconocido(ModuloDesconocidoException e) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problema.setTitle("Módulo no encontrado");
 		return problema;
 	}
 
