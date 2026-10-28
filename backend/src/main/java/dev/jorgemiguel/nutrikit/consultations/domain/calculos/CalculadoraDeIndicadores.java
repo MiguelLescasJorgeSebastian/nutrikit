@@ -1,9 +1,11 @@
 package dev.jorgemiguel.nutrikit.consultations.domain.calculos;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Aplica todos los cálculos y devuelve los que tuvieron datos suficientes, por código de indicador. */
 public final class CalculadoraDeIndicadores {
 
 	private final List<Calculo> calculos;
@@ -13,11 +15,16 @@ public final class CalculadoraDeIndicadores {
 	}
 
 	public static CalculadoraDeIndicadores con(FormulaGeb formulaGeb) {
-		throw new UnsupportedOperationException("Pendiente: TDD en rojo");
+		return new CalculadoraDeIndicadores(List.of(new IndiceDeMasaCorporal(), new IndiceCinturaCadera(),
+				new GastoEnergeticoBasal(formulaGeb.formula())));
 	}
 
 	public Map<String, BigDecimal> calcular(Entradas entradas) {
-		throw new UnsupportedOperationException("Pendiente: TDD en rojo");
+		Map<String, BigDecimal> resultado = new LinkedHashMap<>();
+		for (Calculo calculo : calculos) {
+			calculo.calcular(entradas).ifPresent(valor -> resultado.put(calculo.indicador(), valor));
+		}
+		return resultado;
 	}
 
 }
