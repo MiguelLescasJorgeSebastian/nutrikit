@@ -37,6 +37,23 @@ class ModularityTests {
 				.isEmpty();
 	}
 
+	/**
+	 * Consultas guarda el paciente_id y pregunta por él a la API pública de pacientes; nunca usa sus
+	 * clases internas (verify() fallaría) y pacientes no depende de consultas.
+	 */
+	@Test
+	void consultasUsaPacientesSoloPorSuApiPublica() {
+		var consultas = modules.getModuleByName("consultations").orElseThrow();
+		var pacientes = modules.getModuleByName("patients").orElseThrow();
+
+		assertThat(consultas.getDependencies(modules, DependencyDepth.IMMEDIATE).contains(pacientes)).isTrue();
+		assertThat(pacientes.getDependencies(modules, DependencyDepth.IMMEDIATE).contains(consultas)).isFalse();
+		assertThat(consultas.getDependencies(modules, DependencyDepth.IMMEDIATE).stream()
+				.filter(dependencia -> dependencia.getTargetModule().equals(pacientes))
+				.map(dependencia -> dependencia.getTargetType().getPackageName()))
+				.allMatch("dev.jorgemiguel.nutrikit.patients"::equals);
+	}
+
 	/** Genera diagramas C4 y fichas de cada módulo en target/spring-modulith-docs. */
 	@Test
 	void writesDocumentation() {
