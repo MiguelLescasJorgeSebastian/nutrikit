@@ -19,6 +19,9 @@ public interface Pacientes {
 	 */
 	boolean tieneConsentimientoVigente(UUID pacienteId);
 
+	/** Nombre y apellidos de un paciente activo, para mostrarle su propia página. */
+	Optional<DatosGenerales> datosGenerales(UUID pacienteId);
+
 	/** Fecha de nacimiento y sexo de un paciente activo; vacío si no existe o está dado de baja. */
 	Optional<PerfilClinico> perfilClinico(UUID pacienteId);
 

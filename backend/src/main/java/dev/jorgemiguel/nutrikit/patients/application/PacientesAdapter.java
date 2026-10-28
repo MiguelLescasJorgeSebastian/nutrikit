@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.jorgemiguel.nutrikit.patients.DatosGenerales;
 import dev.jorgemiguel.nutrikit.patients.Pacientes;
 import dev.jorgemiguel.nutrikit.patients.PerfilClinico;
 import dev.jorgemiguel.nutrikit.patients.domain.Consentimiento;
@@ -27,6 +28,11 @@ class PacientesAdapter implements Pacientes {
 	@Override
 	public boolean estaActivo(UUID pacienteId) {
 		return pacientes.findById(pacienteId).isPresent();
+	}
+
+	@Override
+	public Optional<DatosGenerales> datosGenerales(UUID pacienteId) {
+		return pacientes.findById(pacienteId).map(p -> new DatosGenerales(p.getNombre(), p.getApellidos()));
 	}
 
 	@Override

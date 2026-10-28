@@ -17,6 +17,7 @@
 		<java.version>25</java.version>
 		<spring-modulith.version>2.1.1</spring-modulith.version>
 		<springdoc.version>3.2.0</springdoc.version>
+		<bouncycastle.version>1.86</bouncycastle.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -34,6 +35,12 @@
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
+		</dependency>
+		<!-- Argon2 para el PIN del enlace del paciente (Argon2PasswordEncoder de Spring Security). -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

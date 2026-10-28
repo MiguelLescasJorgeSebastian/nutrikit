@@ -3,10 +3,12 @@ package dev.jorgemiguel.nutrikit.iam.application;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import dev.jorgemiguel.nutrikit.iam.application.LimitadorDeIntentos.Clave;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos.Clave;
 import dev.jorgemiguel.nutrikit.iam.domain.Usuario;
 
 /**
@@ -28,7 +30,7 @@ public class OperadorAutenticacionService {
 	private final String hashSenuelo;
 
 	OperadorAutenticacionService(SeguridadProperties properties, PasswordEncoder passwordEncoder,
-			EmisorDeTokens emisor, LimitadorDeIntentos limitador) {
+			EmisorDeTokens emisor, @Qualifier("limitadorDeInicioDeSesion") LimitadorDeIntentos limitador) {
 		this.properties = properties;
 		this.passwordEncoder = passwordEncoder;
 		this.emisor = emisor;

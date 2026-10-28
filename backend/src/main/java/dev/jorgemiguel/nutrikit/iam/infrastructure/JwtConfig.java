@@ -1,6 +1,7 @@
 package dev.jorgemiguel.nutrikit.iam.infrastructure;
 
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.util.Base64;
 
 import javax.crypto.SecretKey;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import dev.jorgemiguel.nutrikit.iam.application.SeguridadProperties;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos;
 
 /**
  * Firma y validación de los access tokens con HMAC-SHA256 (HS256) y una clave simétrica.
@@ -70,6 +72,12 @@ class JwtConfig {
 		NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(claveJwt).macAlgorithm(MacAlgorithm.HS256).build();
 		decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.jwt().emisor()));
 		return decoder;
+	}
+
+	/** Límite de inicios de sesión fallidos, propio de este módulo. */
+	@Bean
+	LimitadorDeIntentos limitadorDeInicioDeSesion(SeguridadProperties properties, Clock clock) {
+		return new LimitadorDeIntentos(properties.intentos().ventana(), clock);
 	}
 
 	/**

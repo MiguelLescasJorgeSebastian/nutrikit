@@ -20,6 +20,11 @@ public final class Acciones {
 	public static final String CONSULTA_REGISTRADA = "CONSULTA_REGISTRADA";
 	public static final String INDICADOR_CREADO = "INDICADOR_CREADO";
 	public static final String MEDICION_CORREGIDA = "MEDICION_CORREGIDA";
+	public static final String ENLACE_GENERADO = "ENLACE_GENERADO";
+	public static final String ENLACE_REVOCADO = "ENLACE_REVOCADO";
+	public static final String ENLACE_CONFIGURADO = "ENLACE_CONFIGURADO";
+	public static final String ACCESO_PACIENTE = "ACCESO_PACIENTE";
+	public static final String ACCESO_PACIENTE_RECHAZADO = "ACCESO_PACIENTE_RECHAZADO";
 
 	public static final String RECURSO_TENANT = "TENANT";
 	public static final String RECURSO_USUARIO = "USUARIO";
@@ -33,6 +38,9 @@ public final class Acciones {
 	public static final String RECURSO_AVISO_DE_PRIVACIDAD = "AVISO_DE_PRIVACIDAD";
 	public static final String RECURSO_CONSULTA = "CONSULTA";
 	public static final String RECURSO_INDICADOR = "INDICADOR";
+
+	/** El recurso_id es el del paciente. */
+	public static final String RECURSO_ENLACE = "ENLACE_ACCESO";
 
 	/** La tabla no tiene columna de detalle: el módulo va en el tipo de recurso ({@code MODULO_SCHEDULING}). */
 	public static String recursoModulo(String codigo) {
