@@ -16,3 +16,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0010](0010-consentimiento.md) | Aviso de privacidad y consentimiento del paciente | Aceptada |
 | [0011](0011-consultas-y-mediciones.md) | Consultas y mediciones con catálogo de indicadores | Aceptada |
 | [0012](0012-indicadores-calculados.md) | Indicadores calculados: dominio puro, guardados y recalculados | Aceptada |
+| [0013](0013-lectura-de-series.md) | Series de indicadores: lectura con SQL y sin entidades | Aceptada |
