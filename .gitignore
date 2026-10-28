@@ -11,6 +11,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# Valores de desarrollo del frontend (URL local y slug de prueba), sin secretos: Vite los incrusta
+# en el bundle, así que nunca deben llevar uno.
+!frontend/.env.development
 
 # Frontend
 node_modules/
