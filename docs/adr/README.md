@@ -18,3 +18,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0012](0012-indicadores-calculados.md) | Indicadores calculados: dominio puro, guardados y recalculados | Aceptada |
 | [0013](0013-lectura-de-series.md) | Series de indicadores: lectura con SQL y sin entidades | Aceptada |
 | [0014](0014-enlace-privado-del-paciente.md) | Implementación del enlace privado del paciente | Aceptada |
+| [0015](0015-tokens-en-el-navegador.md) | Dónde viven los tokens en el navegador | Aceptada |

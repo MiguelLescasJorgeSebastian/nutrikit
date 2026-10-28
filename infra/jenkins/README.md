@@ -4,7 +4,7 @@ Integración continua de nutrikit en Docker. Toda la configuración es código:
 
 | Archivo | Qué define |
 | --- | --- |
-| [`Dockerfile`](Dockerfile) | Jenkins LTS, JDK 25 para compilar y los plugins |
+| [`Dockerfile`](Dockerfile) | Jenkins LTS, JDK 25 y Node 24 para compilar, y los plugins |
 | [`plugins.txt`](plugins.txt) | Plugins con versión fija |
 | [`casc/jenkins.yaml`](casc/jenkins.yaml) | Usuario, seguridad, JDK, credenciales y el Multibranch Pipeline ([Configuration as Code](https://www.jenkins.io/projects/jcasc/)) |
 | [`compose.yaml`](compose.yaml) | Contenedor, volumen persistente y acceso a Docker para Testcontainers |
@@ -43,10 +43,16 @@ El primer build tarda más (unos 11 minutos) porque descarga Maven y todas las d
 `Jenkinsfile`, en la raíz del repositorio:
 
 1. **Checkout** de la rama o del PR. Los PR se construyen como si ya estuvieran integrados en `main`.
-2. **Build y pruebas:** `./mvnw clean verify` con el JDK `temurin-25`. Incluye las pruebas con Testcontainers y la verificación de módulos de Spring Modulith. Si una prueba falla, el build queda en rojo.
+2. **Build y pruebas**, backend y frontend en paralelo (si uno falla, el otro termina para ver todos los errores):
+   - **Backend:** `./mvnw clean verify` con el JDK `temurin-25`. Incluye las pruebas con Testcontainers y la verificación de módulos de Spring Modulith.
+   - **Frontend:** con el Node 24 de la imagen, `npm ci`, `npm run lint`, `npm run format:check`, `npm run test:ci` (Vitest) y `npm run build` (TypeScript estricto + Vite).
+
+   Si una prueba, el lint o los tipos fallan, el build queda en rojo.
 3. **Siempre**, pase o falle:
-   - Publica los resultados de JUnit: en cada build, *Tests*; en el job, la tendencia.
-   - Archiva `backend/target/spring-modulith-docs` como artifact descargable.
+   - Publica los resultados de JUnit de ambos: en cada build, *Tests*; en el job, la tendencia.
+   - Archiva `backend/target/spring-modulith-docs` y `frontend/dist` como artifacts descargables.
+
+Tras cambiar el `Dockerfile` (por ejemplo, el Node de esta etapa), reconstruye la imagen: `docker compose up -d --build`.
 
 ## Cómo se entera Jenkins de los cambios
 

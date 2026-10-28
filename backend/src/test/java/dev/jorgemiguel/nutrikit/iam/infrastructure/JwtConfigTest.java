@@ -18,7 +18,7 @@ class JwtConfigTest {
 	private static SeguridadProperties conSecreto(String secreto, boolean permitirEfimera) {
 		return new SeguridadProperties(
 				new SeguridadProperties.Jwt(secreto, permitirEfimera, Duration.ofMinutes(15), "nutrikit"),
-				new SeguridadProperties.Refresh(Duration.ofDays(14)),
+				new SeguridadProperties.Refresh(Duration.ofDays(14), true),
 				new SeguridadProperties.Intentos(5, 20, Duration.ofMinutes(15)),
 				new SeguridadProperties.Operador(null, null));
 	}
@@ -58,7 +58,7 @@ class JwtConfigTest {
 	void elAccessTokenNoPuedeDurarMasDe15Minutos() {
 		assertThatThrownBy(() -> new SeguridadProperties(
 				new SeguridadProperties.Jwt(null, true, Duration.ofMinutes(16), "nutrikit"),
-				new SeguridadProperties.Refresh(Duration.ofDays(14)),
+				new SeguridadProperties.Refresh(Duration.ofDays(14), true),
 				new SeguridadProperties.Intentos(5, 20, Duration.ofMinutes(15)),
 				new SeguridadProperties.Operador(null, null)))
 				.isInstanceOf(IllegalArgumentException.class);

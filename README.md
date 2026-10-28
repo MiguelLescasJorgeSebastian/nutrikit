@@ -21,7 +21,7 @@ Diagramas C4 como código en [`docs/architecture/`](docs/architecture/): [nivel 
 | Backend | Java 25, Spring Boot 4.1, Spring Modulith 2.1, Spring Security, Spring Data JPA |
 | Datos | PostgreSQL 17, Flyway |
 | Pruebas | JUnit 5, Testcontainers, pruebas de arquitectura de Modulith |
-| Frontend | React + TypeScript + Vite (pendiente) |
+| Frontend | React + TypeScript + Vite, TanStack Query, React Router, Tailwind |
 | CI/CD | Jenkins en Docker con Configuration as Code ([`infra/jenkins`](infra/jenkins/README.md)) |
 | Infra | Docker Compose, AWS + Terraform (pendiente) |
 
@@ -30,7 +30,7 @@ Diagramas C4 como código en [`docs/architecture/`](docs/architecture/): [nivel 
 ```
 nutrikit/
 ├── backend/     # Spring Boot: un módulo por paquete en dev.jorgemiguel.nutrikit
-├── frontend/    # React (pendiente)
+├── frontend/    # Panel del consultorio en React (ver frontend/README.md)
 ├── infra/       # Jenkins (infra/jenkins); Terraform y despliegue (pendiente)
 └── docs/        # ADRs, diagramas C4 y modelo de datos
 ```
