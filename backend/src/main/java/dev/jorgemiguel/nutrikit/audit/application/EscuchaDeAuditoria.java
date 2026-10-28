@@ -6,6 +6,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import dev.jorgemiguel.nutrikit.audit.domain.Acciones;
 import dev.jorgemiguel.nutrikit.audit.domain.RegistroDeAuditoria;
+import dev.jorgemiguel.nutrikit.consultations.ConsultaRegistrada;
+import dev.jorgemiguel.nutrikit.consultations.IndicadorCreado;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
 import dev.jorgemiguel.nutrikit.patients.AvisoDePrivacidadPublicado;
@@ -136,6 +138,20 @@ class EscuchaDeAuditoria {
 	public void on(AvisoDePrivacidadPublicado evento) {
 		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.AVISO_DE_PRIVACIDAD_PUBLICADO,
 				Acciones.RECURSO_AVISO_DE_PRIVACIDAD, evento.avisoId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(ConsultaRegistrada evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.CONSULTA_REGISTRADA,
+				Acciones.RECURSO_CONSULTA, evento.consultaId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(IndicadorCreado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.INDICADOR_CREADO,
+				Acciones.RECURSO_INDICADOR, evento.indicadorId(), evento.ocurridoEn()));
 	}
 
 	private void registrar(RegistroDeAuditoria registro) {

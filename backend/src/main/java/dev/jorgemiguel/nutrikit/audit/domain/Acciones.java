@@ -17,6 +17,8 @@ public final class Acciones {
 	public static final String CONSENTIMIENTO_OTORGADO = "CONSENTIMIENTO_OTORGADO";
 	public static final String CONSENTIMIENTO_RETIRADO = "CONSENTIMIENTO_RETIRADO";
 	public static final String AVISO_DE_PRIVACIDAD_PUBLICADO = "AVISO_PRIVACIDAD_PUBLICADO";
+	public static final String CONSULTA_REGISTRADA = "CONSULTA_REGISTRADA";
+	public static final String INDICADOR_CREADO = "INDICADOR_CREADO";
 
 	public static final String RECURSO_TENANT = "TENANT";
 	public static final String RECURSO_USUARIO = "USUARIO";
@@ -28,6 +30,8 @@ public final class Acciones {
 	/** El recurso_id es el del paciente. */
 	public static final String RECURSO_CONSENTIMIENTO = "CONSENTIMIENTO";
 	public static final String RECURSO_AVISO_DE_PRIVACIDAD = "AVISO_DE_PRIVACIDAD";
+	public static final String RECURSO_CONSULTA = "CONSULTA";
+	public static final String RECURSO_INDICADOR = "INDICADOR";
 
 	/** La tabla no tiene columna de detalle: el módulo va en el tipo de recurso ({@code MODULO_SCHEDULING}). */
 	public static String recursoModulo(String codigo) {
