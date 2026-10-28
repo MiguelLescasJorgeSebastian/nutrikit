@@ -70,17 +70,22 @@ class HistoriaClinicaTest {
 	}
 
 	@BeforeEach
-	void preparar() {
+	void preparar() throws Exception {
 		ana = consultorioNuevo();
 	}
 
 	// --- utilidades ---------------------------------------------------------------------------
 
-	private Consultorio consultorioNuevo() {
+	/** Consultorio con su aviso de privacidad publicado. */
+	private Consultorio consultorioNuevo() throws Exception {
 		UUID id = UUID.randomUUID();
 		String slug = "historia-" + id.toString().substring(0, 8);
 		jdbc.sql("INSERT INTO tenant (id, slug, nombre) VALUES (?, ?, 'Consultorio')").params(id, slug).update();
-		return new Consultorio(id, slug);
+		var consultorio = new Consultorio(id, slug);
+		mvc.perform(como(consultorio, post("/api/avisos-de-privacidad"), "TITULAR").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"version\": \"1\", \"contenido\": \"Aviso de privacidad de prueba\"}"))
+				.andExpect(status().isCreated());
+		return consultorio;
 	}
 
 	private MockHttpServletRequestBuilder como(Consultorio consultorio, MockHttpServletRequestBuilder peticion, String rol) {
@@ -95,7 +100,12 @@ class HistoriaClinicaTest {
 						{"nombre": "Ana", "apellidos": "Ruiz", "fechaNacimiento": "1990-01-01", "sexo": "FEMENINO"}
 						"""))
 				.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-		return JsonPath.read(respuesta, "$.id");
+		String id = JsonPath.read(respuesta, "$.id");
+		// Sin consentimiento no se puede guardar su historia clínica (ver ConsentimientoTest).
+		mvc.perform(como(consultorio, post("/api/pacientes/%s/consentimientos".formatted(id)), "TITULAR")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"medio\": \"PRESENCIAL\"}"))
+				.andExpect(status().isCreated());
+		return id;
 	}
 
 	private ResultActions guardar(Consultorio consultorio, String pacienteId, String json) throws Exception {
