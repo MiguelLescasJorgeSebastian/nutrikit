@@ -1,5 +1,6 @@
 package dev.jorgemiguel.nutrikit.tenants;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -10,5 +11,8 @@ public interface Consultorios {
 
 	/** Si existe un consultorio con ese id, en cualquier estado. */
 	boolean existe(UUID tenantId);
+
+	/** Ids de todos los consultorios, en cualquier estado; para tareas que recorren a todos. */
+	List<UUID> ids();
 
 }

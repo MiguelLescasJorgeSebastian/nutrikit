@@ -1,5 +1,6 @@
 package dev.jorgemiguel.nutrikit.tenants.application;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -21,6 +22,11 @@ class ConsultoriosAdapter implements Consultorios {
 	@Override
 	public boolean existe(UUID tenantId) {
 		return repository.findById(tenantId).isPresent();
+	}
+
+	@Override
+	public List<UUID> ids() {
+		return repository.findAllIds();
 	}
 
 }
