@@ -19,8 +19,8 @@ public final class IndiceCinturaCadera implements Calculo {
 
 	@Override
 	public Optional<BigDecimal> calcular(Entradas entradas) {
-		var cintura = entradas.medicion("circunferencia_cintura");
-		var cadera = entradas.medicion("circunferencia_cadera");
+		var cintura = entradas.medicion(Entradas.CINTURA);
+		var cadera = entradas.medicion(Entradas.CADERA);
 		if (cintura.isEmpty() || cadera.isEmpty()) {
 			return Optional.empty();
 		}

@@ -18,8 +18,8 @@ public final class IndiceDeMasaCorporal implements Calculo {
 
 	@Override
 	public Optional<BigDecimal> calcular(Entradas entradas) {
-		var peso = entradas.medicion("peso");
-		var talla = entradas.medicion("talla");
+		var peso = entradas.medicion(Entradas.PESO);
+		var talla = entradas.medicion(Entradas.TALLA);
 		if (peso.isEmpty() || talla.isEmpty()) {
 			return Optional.empty();
 		}

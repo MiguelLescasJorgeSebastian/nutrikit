@@ -10,6 +10,12 @@ import java.util.Optional;
  */
 public record Entradas(Map<String, BigDecimal> mediciones, Integer edad, Sexo sexo) {
 
+	/** Códigos del catálogo de indicadores que usan los cálculos como entrada. */
+	public static final String PESO = "peso";
+	public static final String TALLA = "talla";
+	public static final String CINTURA = "circunferencia_cintura";
+	public static final String CADERA = "circunferencia_cadera";
+
 	public Entradas {
 		mediciones = Map.copyOf(mediciones);
 	}

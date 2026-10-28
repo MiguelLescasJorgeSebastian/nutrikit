@@ -22,8 +22,8 @@ public final class GastoEnergeticoBasal implements Calculo {
 
 	@Override
 	public Optional<BigDecimal> calcular(Entradas entradas) {
-		var peso = entradas.medicion("peso");
-		var talla = entradas.medicion("talla");
+		var peso = entradas.medicion(Entradas.PESO);
+		var talla = entradas.medicion(Entradas.TALLA);
 		var edad = entradas.edadConocida();
 		var sexo = entradas.sexoConocido();
 		if (peso.isEmpty() || talla.isEmpty() || edad.isEmpty() || sexo.isEmpty()) {
