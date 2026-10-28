@@ -2,6 +2,7 @@
 
 - Estado: Aceptada
 - Fecha: 2026-10-27
+- Detallada por: [0015](0015-tokens-en-el-navegador.md) (dónde vive cada token en el navegador)
 
 ## Contexto
 
