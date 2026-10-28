@@ -21,15 +21,12 @@ record SesionResponse(
 		@Schema(description = "Vencimiento del access token (15 minutos)", example = "2026-10-27T18:45:00Z")
 		Instant expiraEn,
 
-		@Schema(description = "Se usa una sola vez en /api/auth/refresh. No viene en la sesión del operador.")
-		String refreshToken,
-
-		@Schema(example = "2026-11-10T18:30:00Z")
+		@Schema(description = "Vencimiento del refresh token, que viaja solo en la cookie HttpOnly. "
+				+ "No viene en la sesión del operador.", example = "2026-11-10T18:30:00Z")
 		Instant refreshExpiraEn) {
 
 	static SesionResponse de(SesionEmitida sesion) {
-		return new SesionResponse(sesion.accessToken(), "Bearer", sesion.accessExpiraEn(), sesion.refreshToken(),
-				sesion.refreshExpiraEn());
+		return new SesionResponse(sesion.accessToken(), "Bearer", sesion.accessExpiraEn(), sesion.refreshExpiraEn());
 	}
 
 	@Override

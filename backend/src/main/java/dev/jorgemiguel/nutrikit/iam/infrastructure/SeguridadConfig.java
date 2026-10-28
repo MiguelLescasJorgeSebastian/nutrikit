@@ -36,8 +36,9 @@ public class SeguridadConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper json) throws Exception {
 		var respuestas = new RespuestasDeSeguridad(json);
 		return http
-				// API sin sesión ni cookies: el token viaja en la cabecera Authorization, así que no
-				// aplica CSRF.
+				// El access token viaja en la cabecera Authorization. La única cookie es la del refresh
+				// token, con SameSite=Strict y Path=/api/auth: el navegador no la manda desde otro sitio,
+				// así que no hace falta un token CSRF (ver docs/adr/0015-tokens-en-el-navegador.md).
 				.csrf(csrf -> csrf.disable())
 				.sessionManagement(sesion -> sesion.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(rutas -> rutas

@@ -1,11 +1,15 @@
 package dev.jorgemiguel.nutrikit.iam;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,6 +23,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.spec.SecretKeySpec;
+
+import jakarta.servlet.http.Cookie;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +60,7 @@ import dev.jorgemiguel.nutrikit.shared.TenantContext;
 
 /**
  * Autenticación de punta a punta con tokens reales: login, JWT, roles, aislamiento entre
- * consultorios, rotación de refresh tokens y límite de intentos.
+ * consultorios, rotación de refresh tokens (en su cookie HttpOnly) y límite de intentos.
  *
  * <p>Cada prueba usa su propia IP de origen, porque el límite de intentos por IP se comparte
  * entre las pruebas del mismo contexto.
@@ -70,6 +76,8 @@ import dev.jorgemiguel.nutrikit.shared.TenantContext;
 class AutenticacionTest {
 
 	private static final String PASSWORD = "contraseña-de-prueba-ana";
+	private static final String COOKIE = "nutrikit_refresh";
+	private static final int CATORCE_DIAS = (int) Duration.ofDays(14).toSeconds();
 	private static final AtomicInteger SIGUIENTE_IP = new AtomicInteger(1);
 
 	@Autowired
@@ -147,9 +155,22 @@ class AutenticacionTest {
 	}
 
 	private ResultActions renovar(String slug, String refreshToken) throws Exception {
-		return mvc.perform(post("/api/auth/refresh").header("X-Tenant", slug)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"refreshToken\": \"%s\"}".formatted(refreshToken)));
+		return mvc.perform(post("/api/auth/refresh").header("X-Tenant", slug).cookie(cookieDeRefresh(refreshToken)));
+	}
+
+	private ResultActions cerrarSesion(String slug, String refreshToken) throws Exception {
+		return mvc.perform(post("/api/auth/logout").header("X-Tenant", slug).cookie(cookieDeRefresh(refreshToken)));
+	}
+
+	private static Cookie cookieDeRefresh(String refreshToken) {
+		return new Cookie(COOKIE, refreshToken);
+	}
+
+	/** El refresh token que dejó la respuesta en su cookie. */
+	private static String refresh(ResultActions resultado) {
+		Cookie cookie = resultado.andReturn().getResponse().getCookie(COOKIE);
+		assertThat(cookie).as("cookie " + COOKIE).isNotNull();
+		return cookie.getValue();
 	}
 
 	private ResultActions consultorioActual(String slug, String accessToken) throws Exception {
@@ -174,14 +195,20 @@ class AutenticacionTest {
 	class InicioDeSesion {
 
 		@Test
-		void devuelveUnAccessTokenDe15MinutosYUnRefreshToken() throws Exception {
+		void devuelveUnAccessTokenDe15MinutosYElRefreshTokenSoloEnUnaCookieHttpOnly() throws Exception {
 			UUID ana = consultorioConUsuario("auth-ana-1", "ana@ana.mx", "TITULAR");
 
 			var sesion = login("auth-ana-1", "ana@ana.mx", PASSWORD)
 					.andExpect(status().isOk())
 					.andExpect(header().string(HttpHeaders.CACHE_CONTROL, containsString("no-store")))
 					.andExpect(jsonPath("$.tipo").value("Bearer"))
-					.andExpect(jsonPath("$.refreshToken").isNotEmpty());
+					.andExpect(jsonPath("$.refreshToken").doesNotExist())
+					.andExpect(cookie().httpOnly(COOKIE, true))
+					.andExpect(cookie().secure(COOKIE, true))
+					.andExpect(cookie().sameSite(COOKIE, "Strict"))
+					.andExpect(cookie().path(COOKIE, "/api/auth"))
+					.andExpect(cookie().maxAge(COOKIE, both(greaterThan(CATORCE_DIAS - 60)).and(lessThanOrEqualTo(CATORCE_DIAS))));
+			assertThat(refresh(sesion)).isNotBlank();
 
 			Jwt jwt = jwtDecoder.decode(campo(sesion, "$.accessToken"));
 			assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isLessThanOrEqualTo(Duration.ofMinutes(15));
@@ -360,12 +387,13 @@ class AutenticacionTest {
 		@Test
 		void renovarEntregaUnParNuevoYElAnteriorYaNoSirve() throws Exception {
 			consultorioConUsuario("auth-rot-1", "ana@ana.mx", "TITULAR");
-			String primero = campo(login("auth-rot-1", "ana@ana.mx", PASSWORD), "$.refreshToken");
+			String primero = refresh(login("auth-rot-1", "ana@ana.mx", PASSWORD));
 
 			var renovada = renovar("auth-rot-1", primero)
 					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.refreshToken").value(not(primero)));
-			String segundo = campo(renovada, "$.refreshToken");
+					.andExpect(cookie().value(COOKIE, not(primero)))
+					.andExpect(cookie().httpOnly(COOKIE, true));
+			String segundo = refresh(renovada);
 
 			consultorioActual("auth-rot-1", campo(renovada, "$.accessToken")).andExpect(status().isOk());
 			renovar("auth-rot-1", segundo).andExpect(status().isOk());
@@ -374,9 +402,9 @@ class AutenticacionTest {
 		@Test
 		void reutilizarUnTokenRotadoInvalidaTodasLasSesiones() throws Exception {
 			consultorioConUsuario("auth-rot-2", "ana@ana.mx", "TITULAR");
-			String robado = campo(login("auth-rot-2", "ana@ana.mx", PASSWORD), "$.refreshToken");
-			String otraSesion = campo(login("auth-rot-2", "ana@ana.mx", PASSWORD), "$.refreshToken");
-			String legitimo = campo(renovar("auth-rot-2", robado).andExpect(status().isOk()), "$.refreshToken");
+			String robado = refresh(login("auth-rot-2", "ana@ana.mx", PASSWORD));
+			String otraSesion = refresh(login("auth-rot-2", "ana@ana.mx", PASSWORD));
+			String legitimo = refresh(renovar("auth-rot-2", robado).andExpect(status().isOk()));
 
 			// El atacante usa el token que ya se rotó.
 			renovar("auth-rot-2", robado)
@@ -389,22 +417,51 @@ class AutenticacionTest {
 		}
 
 		@Test
-		void cerrarSesionRevocaElRefreshToken() throws Exception {
+		void cerrarSesionRevocaElRefreshTokenYBorraLaCookie() throws Exception {
 			consultorioConUsuario("auth-logout", "ana@ana.mx", "TITULAR");
-			String refresh = campo(login("auth-logout", "ana@ana.mx", PASSWORD), "$.refreshToken");
+			String refresh = refresh(login("auth-logout", "ana@ana.mx", PASSWORD));
 
-			mvc.perform(post("/api/auth/logout").header("X-Tenant", "auth-logout")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content("{\"refreshToken\": \"%s\"}".formatted(refresh)))
-					.andExpect(status().isNoContent());
+			cerrarSesion("auth-logout", refresh)
+					.andExpect(status().isNoContent())
+					.andExpect(cookie().maxAge(COOKIE, 0))
+					.andExpect(cookie().path(COOKIE, "/api/auth"));
 
 			renovar("auth-logout", refresh).andExpect(status().isUnauthorized());
 		}
 
 		@Test
+		void cerrarSesionSinCookieTambienResponde204() throws Exception {
+			consultorioConUsuario("auth-logout-2", "ana@ana.mx", "TITULAR");
+
+			mvc.perform(post("/api/auth/logout").header("X-Tenant", "auth-logout-2"))
+					.andExpect(status().isNoContent())
+					.andExpect(cookie().maxAge(COOKIE, 0));
+		}
+
+		@Test
+		void renovarSinCookieDevuelve401() throws Exception {
+			consultorioConUsuario("auth-sin-cookie", "ana@ana.mx", "TITULAR");
+
+			mvc.perform(post("/api/auth/refresh").header("X-Tenant", "auth-sin-cookie"))
+					.andExpect(status().isUnauthorized())
+					.andExpect(jsonPath("$.title").value("Sesión inválida"));
+		}
+
+		@Test
+		void unRefreshTokenEnElCuerpoYaNoSeAcepta() throws Exception {
+			consultorioConUsuario("auth-cuerpo", "ana@ana.mx", "TITULAR");
+			String refresh = refresh(login("auth-cuerpo", "ana@ana.mx", PASSWORD));
+
+			mvc.perform(post("/api/auth/refresh").header("X-Tenant", "auth-cuerpo")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("{\"refreshToken\": \"%s\"}".formatted(refresh)))
+					.andExpect(status().isUnauthorized());
+		}
+
+		@Test
 		void unRefreshTokenExpiradoNoSirve() throws Exception {
 			UUID ana = consultorioConUsuario("auth-rot-exp", "ana@ana.mx", "TITULAR");
-			String refresh = campo(login("auth-rot-exp", "ana@ana.mx", PASSWORD), "$.refreshToken");
+			String refresh = refresh(login("auth-rot-exp", "ana@ana.mx", PASSWORD));
 			jdbcComo(ana, "UPDATE refresh_token SET expira_en = now() - interval '1 minute'");
 
 			renovar("auth-rot-exp", refresh).andExpect(status().isUnauthorized());
@@ -414,7 +471,7 @@ class AutenticacionTest {
 		void elRefreshTokenDeUnConsultorioNoSirveEnOtro() throws Exception {
 			consultorioConUsuario("auth-ana-8", "ana@ana.mx", "TITULAR");
 			consultorioConUsuario("auth-beto-8", "beto@beto.mx", "TITULAR");
-			String deAna = campo(login("auth-ana-8", "ana@ana.mx", PASSWORD), "$.refreshToken");
+			String deAna = refresh(login("auth-ana-8", "ana@ana.mx", PASSWORD));
 
 			renovar("auth-beto-8", deAna).andExpect(status().isUnauthorized());
 			// Y no se gastó: en su consultorio sigue sirviendo.
@@ -424,7 +481,7 @@ class AutenticacionTest {
 		@Test
 		void soloSeGuardaElHashDelRefreshToken() throws Exception {
 			UUID ana = consultorioConUsuario("auth-rot-hash", "ana@ana.mx", "TITULAR");
-			String refresh = campo(login("auth-rot-hash", "ana@ana.mx", PASSWORD), "$.refreshToken");
+			String refresh = refresh(login("auth-rot-hash", "ana@ana.mx", PASSWORD));
 
 			String guardado = jdbcComoConsulta(ana, "SELECT token_hash FROM refresh_token");
 

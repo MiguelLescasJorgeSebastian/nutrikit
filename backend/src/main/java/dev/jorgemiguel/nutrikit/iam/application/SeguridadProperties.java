@@ -41,7 +41,12 @@ public record SeguridadProperties(
 			@DefaultValue("nutrikit") String emisor) {
 	}
 
-	public record Refresh(@DefaultValue("14d") Duration duracion) {
+	/**
+	 * @param duracion vida del refresh token
+	 * @param cookieSegura marca la cookie del refresh token como {@code Secure}; solo se apaga en
+	 * desarrollo, donde la API corre en http
+	 */
+	public record Refresh(@DefaultValue("14d") Duration duracion, @DefaultValue("true") boolean cookieSegura) {
 	}
 
 	/**
