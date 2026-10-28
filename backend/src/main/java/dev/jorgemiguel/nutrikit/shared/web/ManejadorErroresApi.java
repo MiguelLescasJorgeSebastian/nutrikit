@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import dev.jorgemiguel.nutrikit.shared.ConsultorioNoDisponibleException;
 import dev.jorgemiguel.nutrikit.shared.ConsultorioNoIdentificadoException;
+import dev.jorgemiguel.nutrikit.shared.DemasiadosIntentosException;
 import dev.jorgemiguel.nutrikit.shared.ErrorDeCampo;
 
 /**
@@ -45,6 +46,17 @@ class ManejadorErroresApi extends ResponseEntityExceptionHandler {
 		problema.setDetail("La petición tiene %d error(es) de validación".formatted(errores.size()));
 		problema.setProperty("errores", errores);
 		return handleExceptionInternal(ex, problema, headers, status, request);
+	}
+
+	/** 429 con {@code Retry-After} en segundos, redondeado hacia arriba. */
+	@ExceptionHandler
+	ResponseEntity<ProblemDetail> demasiadosIntentos(DemasiadosIntentosException e) {
+		long segundos = Math.max(1, (e.getReintentarEn().toMillis() + 999) / 1000);
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+		problema.setTitle("Demasiados intentos");
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+				.header(HttpHeaders.RETRY_AFTER, Long.toString(segundos))
+				.body(problema);
 	}
 
 	/** Petición a la API de un consultorio sin subdominio ni cabecera que lo identifique. */

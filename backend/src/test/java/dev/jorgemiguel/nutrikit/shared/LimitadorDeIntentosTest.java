@@ -1,4 +1,4 @@
-package dev.jorgemiguel.nutrikit.iam.application;
+package dev.jorgemiguel.nutrikit.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -12,7 +12,7 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
-import dev.jorgemiguel.nutrikit.iam.application.LimitadorDeIntentos.Clave;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos.Clave;
 
 class LimitadorDeIntentosTest {
 
@@ -43,12 +43,7 @@ class LimitadorDeIntentosTest {
 	}
 
 	private final RelojManual reloj = new RelojManual();
-	private final SeguridadProperties properties = new SeguridadProperties(
-			new SeguridadProperties.Jwt(null, true, Duration.ofMinutes(15), "nutrikit"),
-			new SeguridadProperties.Refresh(Duration.ofDays(14)),
-			new SeguridadProperties.Intentos(3, 10, Duration.ofMinutes(15)),
-			new SeguridadProperties.Operador(null, null));
-	private final LimitadorDeIntentos limitador = new LimitadorDeIntentos(properties, reloj);
+	private final LimitadorDeIntentos limitador = new LimitadorDeIntentos(Duration.ofMinutes(15), reloj);
 	private final Clave ana = Clave.cuenta("t1", "ana@ana.mx", 3);
 
 	private void fallar(int veces) {

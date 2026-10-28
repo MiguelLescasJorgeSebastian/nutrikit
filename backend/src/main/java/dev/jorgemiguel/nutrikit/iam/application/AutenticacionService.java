@@ -6,13 +6,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
-import dev.jorgemiguel.nutrikit.iam.application.LimitadorDeIntentos.Clave;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos;
+import dev.jorgemiguel.nutrikit.shared.LimitadorDeIntentos.Clave;
 import dev.jorgemiguel.nutrikit.iam.domain.RefreshToken;
 import dev.jorgemiguel.nutrikit.iam.domain.RefreshTokenRepository;
 import dev.jorgemiguel.nutrikit.iam.domain.Usuario;
@@ -46,7 +48,7 @@ public class AutenticacionService {
 	private final String hashSenuelo;
 
 	AutenticacionService(UsuarioRepository usuarios, RefreshTokenRepository refreshTokens,
-			PasswordEncoder passwordEncoder, EmisorDeTokens emisor, LimitadorDeIntentos limitador,
+			PasswordEncoder passwordEncoder, EmisorDeTokens emisor, @Qualifier("limitadorDeInicioDeSesion") LimitadorDeIntentos limitador,
 			SeguridadProperties properties, ApplicationEventPublisher eventos, Clock clock) {
 		this.usuarios = usuarios;
 		this.refreshTokens = refreshTokens;

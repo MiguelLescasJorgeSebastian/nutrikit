@@ -1,4 +1,4 @@
-package dev.jorgemiguel.nutrikit.iam.application;
+package dev.jorgemiguel.nutrikit.shared;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -8,18 +8,18 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.stereotype.Component;
-
 /**
  * Limita los inicios de sesión fallidos con una ventana deslizante por clave (IP y correo).
  * Cuando una clave llega al máximo de fallos dentro de la ventana, se rechazan los intentos
  * hasta que el fallo más antiguo sale de la ventana, aunque la contraseña sea correcta.
  *
+ * <p>Cada módulo crea su propia instancia con su ventana (inicio de sesión, enlaces de pacientes), así
+ * los conteos de uno no afectan al otro.
+ *
  * <p>Vive en memoria: sirve con una sola instancia. Con varias réplicas, el conteo debe moverse
  * a un almacén compartido (Redis con Bucket4j, por ejemplo).
  */
-@Component
-class LimitadorDeIntentos {
+public class LimitadorDeIntentos {
 
 	/** Con este número de claves se purgan las que ya no tienen fallos en la ventana. */
 	private static final int UMBRAL_LIMPIEZA = 10_000;
@@ -28,13 +28,13 @@ class LimitadorDeIntentos {
 	private final Duration ventana;
 	private final Clock clock;
 
-	LimitadorDeIntentos(SeguridadProperties properties, Clock clock) {
-		this.ventana = properties.intentos().ventana();
+	public LimitadorDeIntentos(Duration ventana, Clock clock) {
+		this.ventana = ventana;
 		this.clock = clock;
 	}
 
 	/** @throws DemasiadosIntentosException si alguna clave ya llegó a su máximo */
-	void verificar(Clave... claves) {
+	public void verificar(Clave... claves) {
 		Instant ahora = clock.instant();
 		Duration espera = Duration.ZERO;
 		for (Clave clave : claves) {
@@ -55,7 +55,7 @@ class LimitadorDeIntentos {
 		}
 	}
 
-	void registrarFallo(Clave... claves) {
+	public void registrarFallo(Clave... claves) {
 		Instant ahora = clock.instant();
 		if (fallos.size() > UMBRAL_LIMPIEZA) {
 			limpiar(ahora);
@@ -70,7 +70,7 @@ class LimitadorDeIntentos {
 	}
 
 	/** Tras un acceso correcto se olvidan los fallos del correo (no los de la IP). */
-	void reiniciar(Clave clave) {
+	public void reiniciar(Clave clave) {
 		fallos.remove(clave.id());
 	}
 
@@ -91,14 +91,19 @@ class LimitadorDeIntentos {
 	}
 
 	/** Algo que se limita (una IP, un correo en un consultorio) y cuántos fallos se le permiten. */
-	record Clave(String id, int maximo) {
+	public record Clave(String id, int maximo) {
 
-		static Clave ip(String ip, int maximo) {
+		public static Clave ip(String ip, int maximo) {
 			return new Clave("ip:" + ip, maximo);
 		}
 
-		static Clave cuenta(String ambito, String email, int maximo) {
+		public static Clave cuenta(String ambito, String email, int maximo) {
 			return new Clave("cuenta:" + ambito + ":" + email, maximo);
+		}
+
+		/** Cualquier otra cosa que se limite, por ejemplo un enlace privado. */
+		public static Clave de(String tipo, String id, int maximo) {
+			return new Clave(tipo + ":" + id, maximo);
 		}
 
 	}

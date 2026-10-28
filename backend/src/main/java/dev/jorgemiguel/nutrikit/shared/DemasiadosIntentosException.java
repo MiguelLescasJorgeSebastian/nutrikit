@@ -1,8 +1,8 @@
-package dev.jorgemiguel.nutrikit.iam.application;
+package dev.jorgemiguel.nutrikit.shared;
 
 import java.time.Duration;
 
-/** Demasiados inicios de sesión fallidos; se responde 429 con {@code Retry-After}. */
+/** Demasiados intentos fallidos (inicio de sesión, PIN, enlaces); se responde 429 con {@code Retry-After}. */
 public class DemasiadosIntentosException extends RuntimeException {
 
 	private final Duration reintentarEn;
