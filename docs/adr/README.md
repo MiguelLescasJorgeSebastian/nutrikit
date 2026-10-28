@@ -11,3 +11,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0005](0005-autenticacion-jwt.md) | Autenticación con JWT propios y refresh tokens rotativos | Aceptada |
 | [0006](0006-bitacora-de-auditoria.md) | Bitácora de auditoría con eventos de dominio | Aceptada |
 | [0007](0007-modulos-por-consultorio.md) | Módulos encendidos y apagados por consultorio | Aceptada |
+| [0008](0008-pacientes.md) | Pacientes: baja lógica, búsqueda y ediciones concurrentes | Aceptada |
