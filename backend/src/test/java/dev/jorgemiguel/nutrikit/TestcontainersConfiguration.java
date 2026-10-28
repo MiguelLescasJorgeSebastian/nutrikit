@@ -39,10 +39,11 @@ public class TestcontainersConfiguration {
 			registry.add("spring.flyway.user", postgres::getUsername);
 			registry.add("spring.flyway.password", postgres::getPassword);
 			registry.add("nutrikit.seguridad.jwt.secreto", TestcontainersConfiguration::claveAleatoria);
+			registry.add("nutrikit.cifrado.llaves-maestras", () -> "prueba:" + claveAleatoria());
 		};
 	}
 
-	/** Clave de firma de JWT distinta en cada contexto de pruebas; nunca una fija en el repo. */
+	/** Clave aleatoria de 256 bits por contexto de pruebas (firma de JWT, llave maestra); nunca una fija en el repo. */
 	private static String claveAleatoria() {
 		byte[] bytes = new byte[32];
 		new SecureRandom().nextBytes(bytes);

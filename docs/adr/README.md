@@ -12,3 +12,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0006](0006-bitacora-de-auditoria.md) | Bitácora de auditoría con eventos de dominio | Aceptada |
 | [0007](0007-modulos-por-consultorio.md) | Módulos encendidos y apagados por consultorio | Aceptada |
 | [0008](0008-pacientes.md) | Pacientes: baja lógica, búsqueda y ediciones concurrentes | Aceptada |
+| [0009](0009-cifrado-de-campos.md) | Cifrado de campos con llaves por consultorio (envelope encryption) | Aceptada |

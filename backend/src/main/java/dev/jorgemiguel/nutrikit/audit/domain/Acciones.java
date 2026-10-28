@@ -12,10 +12,15 @@ public final class Acciones {
 	public static final String PACIENTE_CREADO = "PACIENTE_CREADO";
 	public static final String PACIENTE_ACTUALIZADO = "PACIENTE_ACTUALIZADO";
 	public static final String PACIENTE_DADO_DE_BAJA = "PACIENTE_DADO_DE_BAJA";
+	public static final String HISTORIA_CLINICA_CONSULTADA = "HISTORIA_CLINICA_CONSULTADA";
+	public static final String HISTORIA_CLINICA_ACTUALIZADA = "HISTORIA_CLINICA_ACTUALIZADA";
 
 	public static final String RECURSO_TENANT = "TENANT";
 	public static final String RECURSO_USUARIO = "USUARIO";
 	public static final String RECURSO_PACIENTE = "PACIENTE";
+
+	/** El recurso_id es el del paciente: así se responde "quién vio el expediente de X". */
+	public static final String RECURSO_HISTORIA_CLINICA = "HISTORIA_CLINICA";
 
 	/** La tabla no tiene columna de detalle: el módulo va en el tipo de recurso ({@code MODULO_SCHEDULING}). */
 	public static String recursoModulo(String codigo) {

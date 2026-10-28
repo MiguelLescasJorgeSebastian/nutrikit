@@ -69,6 +69,8 @@ AT=$(curl -s -X POST localhost:8080/api/auth/login -H 'X-Tenant: nutri-ana' -H '
 curl -H 'X-Tenant: nutri-ana' -H "Authorization: Bearer $AT" localhost:8080/api/consultorio
 ```
 
+La historia clínica se cifra con una llave maestra ([ADR-0009](docs/adr/0009-cifrado-de-campos.md)). En desarrollo se crea la primera vez en `~/.nutrikit/llave-maestra-dev`, fuera del repositorio; si la borras, los datos cifrados de tu base local quedan ilegibles. En producción viene de `NUTRIKIT_LLAVES_MAESTRAS` y la app no arranca sin ella.
+
 En desarrollo la clave de firma de JWT se genera al arrancar, así que los tokens dejan de servir al reiniciar. En producción viene de `NUTRIKIT_JWT_SECRET` (`openssl rand -base64 32`) y la app no arranca sin ella.
 
 La app se conecta a Postgres con un usuario sin permisos de dueño para que aplique Row-Level Security ([ADR-0004](docs/adr/0004-implementacion-aislamiento-tenant.md)). Si tu base local es anterior a ese cambio, recréala con `docker compose down -v` dentro de `backend/`.
