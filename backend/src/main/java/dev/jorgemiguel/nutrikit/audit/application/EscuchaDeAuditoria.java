@@ -8,6 +8,9 @@ import dev.jorgemiguel.nutrikit.audit.domain.Acciones;
 import dev.jorgemiguel.nutrikit.audit.domain.RegistroDeAuditoria;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
+import dev.jorgemiguel.nutrikit.patients.AvisoDePrivacidadPublicado;
+import dev.jorgemiguel.nutrikit.patients.ConsentimientoOtorgado;
+import dev.jorgemiguel.nutrikit.patients.ConsentimientoRetirado;
 import dev.jorgemiguel.nutrikit.patients.HistoriaClinicaActualizada;
 import dev.jorgemiguel.nutrikit.patients.HistoriaClinicaConsultada;
 import dev.jorgemiguel.nutrikit.patients.PacienteActualizado;
@@ -112,6 +115,27 @@ class EscuchaDeAuditoria {
 	public void on(HistoriaClinicaActualizada evento) {
 		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.HISTORIA_CLINICA_ACTUALIZADA,
 				Acciones.RECURSO_HISTORIA_CLINICA, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(ConsentimientoOtorgado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.CONSENTIMIENTO_OTORGADO,
+				Acciones.RECURSO_CONSENTIMIENTO, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(ConsentimientoRetirado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.CONSENTIMIENTO_RETIRADO,
+				Acciones.RECURSO_CONSENTIMIENTO, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(AvisoDePrivacidadPublicado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.AVISO_DE_PRIVACIDAD_PUBLICADO,
+				Acciones.RECURSO_AVISO_DE_PRIVACIDAD, evento.avisoId(), evento.ocurridoEn()));
 	}
 
 	private void registrar(RegistroDeAuditoria registro) {

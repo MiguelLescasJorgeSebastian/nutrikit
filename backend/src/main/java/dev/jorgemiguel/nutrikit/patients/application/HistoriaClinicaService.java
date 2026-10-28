@@ -27,13 +27,15 @@ public class HistoriaClinicaService {
 
 	private final PacienteRepository pacientes;
 	private final HistoriaClinicaRepository historias;
+	private final ConsentimientoService consentimientos;
 	private final ApplicationEventPublisher eventos;
 	private final Clock clock;
 
 	HistoriaClinicaService(PacienteRepository pacientes, HistoriaClinicaRepository historias,
-			ApplicationEventPublisher eventos, Clock clock) {
+			ConsentimientoService consentimientos, ApplicationEventPublisher eventos, Clock clock) {
 		this.pacientes = pacientes;
 		this.historias = historias;
+		this.consentimientos = consentimientos;
 		this.eventos = eventos;
 		this.clock = clock;
 	}
@@ -48,11 +50,14 @@ public class HistoriaClinicaService {
 	}
 
 	/**
-	 * Crea o reemplaza la historia. Al editar una existente se exige la versión leída, igual que
-	 * con los datos del paciente.
+	 * Crea o reemplaza la historia. Exige consentimiento vigente (LFPDPPP: datos de salud) y, al
+	 * editar una existente, la versión leída, igual que con los datos del paciente.
+	 *
+	 * @throws ConflictoDeConsentimientoException si el paciente no tiene consentimiento vigente
 	 */
 	public HistoriaClinica guardar(UUID pacienteId, Long versionLeida, ContenidoClinico contenido) {
 		Paciente paciente = paciente(pacienteId);
+		consentimientos.exigirVigente(pacienteId);
 		HistoriaClinica historia = historias.findByPacienteId(pacienteId).orElse(null);
 		if (historia == null) {
 			historia = HistoriaClinica.de(paciente);
