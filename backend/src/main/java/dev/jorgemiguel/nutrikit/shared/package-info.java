@@ -13,6 +13,10 @@
 		parameters = @ParamDef(name = FiltroDeTenant.PARAMETRO, type = UUID.class,
 				resolver = FiltroDeTenant.TenantActual.class),
 		autoEnabled = true, applyToLoadByKey = true)
+@FilterDef(name = FiltroDeTenant.NOMBRE_CON_GLOBALES, defaultCondition = FiltroDeTenant.CONDICION_CON_GLOBALES,
+		parameters = @ParamDef(name = FiltroDeTenant.PARAMETRO, type = UUID.class,
+				resolver = FiltroDeTenant.TenantActual.class),
+		autoEnabled = true, applyToLoadByKey = true)
 package dev.jorgemiguel.nutrikit.shared;
 
 import java.util.UUID;

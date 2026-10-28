@@ -1,8 +1,9 @@
 /**
- * Módulo Consultas: consultas, mediciones por indicador, visibilidad y adjuntos.
+ * Módulo Consultas: consultas, mediciones por indicador y el catálogo de indicadores.
  *
- * <p>Fase 1. Solo exponer en la raíz de este paquete la API pública del módulo;
- * el resto va en subpaquetes internos (domain, application, infrastructure, web).
+ * <p>Módulo opcional (encendido por defecto, ver {@code ModuloDelConsultorio}). Guarda el
+ * {@code paciente_id} sin llave foránea y pregunta al módulo de pacientes por su API pública
+ * ({@code Pacientes}). Ver docs/adr/0011-consultas-y-mediciones.md.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Consultas")
 package dev.jorgemiguel.nutrikit.consultations;

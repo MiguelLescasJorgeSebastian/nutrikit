@@ -20,6 +20,13 @@ public final class FiltroDeTenant {
 	public static final String CONDICION = "tenant_id = :" + PARAMETRO;
 
 	/**
+	 * Para catálogos con filas globales ({@code tenant_id} nulo, visibles para todos) y filas propias
+	 * del consultorio, como los indicadores. La política de RLS de esas tablas hace lo mismo.
+	 */
+	public static final String NOMBRE_CON_GLOBALES = "tenantOGlobal";
+	public static final String CONDICION_CON_GLOBALES = "(tenant_id IS NULL OR tenant_id = :" + PARAMETRO + ")";
+
+	/**
 	 * Sin consultorio en contexto, el filtro compara contra un UUID que no existe: la consulta
 	 * no devuelve nada en lugar de devolver todo.
 	 */

@@ -14,3 +14,4 @@ Cada decisión importante se registra en un archivo corto con su contexto, la de
 | [0008](0008-pacientes.md) | Pacientes: baja lógica, búsqueda y ediciones concurrentes | Aceptada |
 | [0009](0009-cifrado-de-campos.md) | Cifrado de campos con llaves por consultorio (envelope encryption) | Aceptada |
 | [0010](0010-consentimiento.md) | Aviso de privacidad y consentimiento del paciente | Aceptada |
+| [0011](0011-consultas-y-mediciones.md) | Consultas y mediciones con catálogo de indicadores | Aceptada |
