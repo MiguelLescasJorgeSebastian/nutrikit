@@ -1,0 +1,37 @@
+# Jenkins local para nutrikit. Uso: docker compose up -d --build  (ver README.md)
+name: nutrikit-jenkins
+
+services:
+  jenkins:
+    build: .
+    image: nutrikit-jenkins:local
+    restart: unless-stopped
+    ports:
+      # 8081 y no 8080: en 8080 corre la app.
+      - '8081:8080'
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:?Define JENKINS_ADMIN_PASSWORD en infra/jenkins/.env}
+      # Testcontainers corre dentro de este contenedor pero los contenedores que crea viven en el
+      # Docker del host: se llega a sus puertos por host.docker.internal.
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+      TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+    volumes:
+      # Datos de Jenkins: jobs, historial, plugins y la caché de Maven (~/.m2).
+      - jenkins_home:/var/jenkins_home
+      - ./casc:/var/jenkins_conf:ro
+      # Socket de Docker del host para Testcontainers. Quien controla este socket controla el
+      # Docker del host: solo para un Jenkins local (ver README.md).
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Permiso para usar el socket: el grupo dueño del socket (0 en Docker Desktop; en Linux,
+    # el grupo docker). Ver DOCKER_GID en .env.example.
+    group_add:
+      - '${DOCKER_GID:-0}'
+    extra_hosts:
+      # En Docker Desktop ya existe; en Linux hay que declararlo.
+      - 'host.docker.internal:host-gateway'
+
+volumes:
+  jenkins_home:
