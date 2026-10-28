@@ -8,6 +8,9 @@ import dev.jorgemiguel.nutrikit.audit.domain.Acciones;
 import dev.jorgemiguel.nutrikit.audit.domain.RegistroDeAuditoria;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionExitoso;
 import dev.jorgemiguel.nutrikit.iam.InicioDeSesionFallido;
+import dev.jorgemiguel.nutrikit.patients.PacienteActualizado;
+import dev.jorgemiguel.nutrikit.patients.PacienteCreado;
+import dev.jorgemiguel.nutrikit.patients.PacienteDadoDeBaja;
 import dev.jorgemiguel.nutrikit.shared.TenantContext;
 import dev.jorgemiguel.nutrikit.tenants.EstadoDeTenantCambiado;
 import dev.jorgemiguel.nutrikit.tenants.ModuloDeConsultorioCambiado;
@@ -72,6 +75,27 @@ class EscuchaDeAuditoria {
 		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(),
 				evento.habilitado() ? Acciones.MODULO_ENCENDIDO : Acciones.MODULO_APAGADO,
 				Acciones.recursoModulo(evento.modulo().codigo()), null, evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(PacienteCreado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.PACIENTE_CREADO,
+				Acciones.RECURSO_PACIENTE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(PacienteActualizado evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.PACIENTE_ACTUALIZADO,
+				Acciones.RECURSO_PACIENTE, evento.pacienteId(), evento.ocurridoEn()));
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void on(PacienteDadoDeBaja evento) {
+		registrar(new RegistroDeAuditoria(evento.tenantId(), evento.origen(), Acciones.PACIENTE_DADO_DE_BAJA,
+				Acciones.RECURSO_PACIENTE, evento.pacienteId(), evento.ocurridoEn()));
 	}
 
 	private void registrar(RegistroDeAuditoria registro) {
